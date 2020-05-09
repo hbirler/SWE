@@ -29,9 +29,13 @@ message(STATUS "Using riemann solver ${SOLVER}")
 find_package(NetCDF)
 find_package(OpenMP)
 find_package(MPI)
+find_package(RAJA)
 
 add_executable(swe-single-node)
+add_executable(swe-research)
 add_library(swe)
+target_link_libraries(swe PUBLIC RAJA)
+target_link_libraries(swe-research PUBLIC RAJA)
 
 if(SOLVER STREQUAL "augRie")
     target_compile_definitions(swe PUBLIC SOLVER_AUGRIE)
@@ -59,6 +63,11 @@ target_sources(swe-single-node
     PRIVATE
     src/examples/swe_simple.cpp
 )
+
+target_sources(swe-research
+    PRIVATE
+    src/examples/swe_research.cpp
+)
     
 target_link_libraries(swe-single-node PUBLIC swe)
 
@@ -77,6 +86,7 @@ endif()
 if (OpenMP_FOUND AND ENABLE_OPENMP)
     target_compile_definitions(swe PUBLIC LOOP_OPENMP)
     target_link_libraries(swe PRIVATE OpenMP::OpenMP_CXX)
+    target_link_libraries(swe-research PRIVATE OpenMP::OpenMP_CXX)
     message(STATUS "OpenMP supported loop parallelization is enabled.")
 else()
     message(STATUS "OpenMP loop parallelization is disabled.")
@@ -110,6 +120,7 @@ endif()
 
 target_include_directories(swe PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 target_include_directories(swe-single-node PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+target_include_directories(swe-research PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 if (ENABLE_NETCDF AND NETCDF_FOUND)
     message(STATUS "Enabled NetCDF writer")
@@ -131,10 +142,11 @@ target_compile_options(swe PUBLIC
 #target_compile_options(swe PUBLIC <$<$ >:-g>) # -Wextra -pedantic)
 
 #C++ Standard
-set_property(TARGET swe PROPERTY CXX_STANDARD 11)
+set_property(TARGET swe PROPERTY CXX_STANDARD 17)
 set_property(TARGET swe PROPERTY CUDA_STANDARD 11)
-set_property(TARGET swe-mpi PROPERTY CXX_STANDARD 11)
-set_property(TARGET swe-single-node PROPERTY CXX_STANDARD 11)
+set_property(TARGET swe-mpi PROPERTY CXX_STANDARD 17)
+set_property(TARGET swe-single-node PROPERTY CXX_STANDARD 17)
+set_property(TARGET swe-research PROPERTY CXX_STANDARD 17)
 
 # Export compiler commands for use in YouCompleteMe
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)

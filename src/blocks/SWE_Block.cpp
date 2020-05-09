@@ -28,13 +28,13 @@
 
 #include "blocks/SWE_Block.hh"
 
-#if !defined(CUDA) 
+//#if !defined(CUDA)
 #if defined(SOLVER_FWAVE) || defined(SOLVER_AUGRIE) || defined(SOLVER_HLLE)
 #include "blocks/SWE_WaveAccumulationBlock.hh"
 #elif defined(SOLVER_RUSANOV)
 #include "blocks/rusanov/SWE_RusanovBlock.hh"
 #endif
-#endif
+//#endif
 
 #include "tools/help.hh"
 
@@ -47,23 +47,23 @@
 // gravitational acceleration
 const float SWE_Block::g = 9.81f;
 
-#if defined(CUDA)
-extern SWE_Block* getCudaBlockInstance(float, float, float, float);
-#endif
+//#if defined(CUDA)
+//extern SWE_Block* getCudaBlockInstance(float, float, float, float);
+//#endif
 
 
 SWE_Block* SWE_Block::getBlockInstance(float nx, float ny, float dx, float dy) {
-  #if !defined(CUDA)
-    #if defined(SOLVER_FWAVE) || defined(SOLVER_AUGRIE) || defined(SOLVER_HLLE)
-        SWE_Block *block = new SWE_WaveAccumulationBlock(nx, ny, dx,dy);
-    #elif defined(SOLVER_RUSANOV)
-        SWE_Block *block = new SWE_RusanovBlock(nx,ny,dx,dy);
-    #elif defined(SOLVER_AUGRIE_SIMD)
-        #error "Not implemented yet!"
-    #endif
-  #else
-      SWE_Block *block = getCudaBlockInstance(nx, ny, dx,dy);
-  #endif
+  //#if !defined(CUDA)
+#if defined(SOLVER_FWAVE) || defined(SOLVER_AUGRIE) || defined(SOLVER_HLLE)
+  SWE_Block *block = new SWE_WaveAccumulationBlock(nx, ny, dx, dy);
+#elif defined(SOLVER_RUSANOV)
+  SWE_Block *block = new SWE_RusanovBlock(nx, ny, dx, dy);
+#elif defined(SOLVER_AUGRIE_SIMD)
+#error "Not implemented yet!"
+#endif
+  //#else
+  //    SWE_Block *block = getCudaBlockInstance(nx, ny, dx,dy);
+  //#endif
   return block;
 }
 

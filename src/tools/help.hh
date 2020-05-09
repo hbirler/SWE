@@ -33,6 +33,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include "tools/MemoryManager.hh"
 
 /**
  * class Float1D is a proxy class that can represent, for example, 
@@ -86,104 +87,79 @@ class Float1D
  * the []-operator, such that elements can be accessed as a[i][j]. 
  */ 
 class Float2D {
-  public:
-  	/**
+public:
+  /**
      * Constructor:
-	   * takes size of the 2D array as parameters and creates a respective Float2D object;
-		 * allocates memory for the array, but does not initialise value.
+	   * takes size of the 2D array as parameters and creates a respective Float2D object; allocates memory for the array, but does not initialise value.
      * @param _cols	number of columns (i.e., elements in horizontal direction)
      * @param _rows rumber of rows (i.e., elements in vertical directions)
-     */
-    Float2D(int _cols, int _rows, bool _allocateMemory = true):
-      rows(_rows),
-      cols(_cols),
-      allocateMemory(_allocateMemory) {
-      if (_allocateMemory) {
-        elem = new float[rows*cols];
-      }
-	  }
+   */
+  Float2D(int _cols, int _rows, bool _allocateMemory = true)
+      : rows(_rows), cols(_cols) {
+    if (_allocateMemory) {
+      elemStorage = make_managed_uptr<float>(rows * cols);
+      elem = elemStorage.get();
+    }
+  }
 
-    /**
+  /**
      * Constructor:
-		 * takes size of the 2D array as parameters and creates a respective Float2D object;
-		 * this constructor does not allocate memory for the array, but uses the allocated memory 
-		 * provided via the respective variable #_elem 
+		 * takes size of the 2D array as parameters and creates a respective Float2D object; this constructor does not allocate memory for the array, but uses the allocated memory provided via the respective variable #_elem
      * @param _cols	number of columns (i.e., elements in horizontal direction)
      * @param _rows rumber of rows (i.e., elements in vertical directions)
      * @param _elem pointer to a suitably allocated region of memory to be used for thew array elements
-     */
-    Float2D(int _cols, int _rows, float* _elem):
-      rows(_rows),
-      cols(_cols),
-      allocateMemory(false) {
-		  elem = _elem;
-	  }
+   */
+  Float2D(int _cols, int _rows, float *_elem)
+      : rows(_rows), cols(_cols) {
+    elem = _elem;
+  }
 
-
-    /**
+  /**
      * Constructor:
-     * takes size of the 2D array as parameters and creates a respective Float2D object;
-     * this constructor does not allocate memory for the array, but uses the allocated memory
-     * provided via the respective variable #_elem
+     * takes size of the 2D array as parameters and creates a respective Float2D object; this constructor does not allocate memory for the array, but uses the allocated memory provided via the respective variable #_elem
      * @param _cols number of columns (i.e., elements in horizontal direction)
      * @param _rows rumber of rows (i.e., elements in vertical directions)
      * @param _elem pointer to a suitably allocated region of memory to be used for thew array elements
-     */
-    Float2D(Float2D& _elem, bool shallowCopy):
-      rows(_elem.rows),
-      cols(_elem.cols),
-      allocateMemory(!shallowCopy) {
-      if (shallowCopy) {
-        elem = _elem.elem;
-        allocateMemory = false;
-      }
-      else {
-        elem = new float[rows*cols];
-        for (int i=0; i<rows*cols; i++) {
-          elem[i] = _elem.elem[i];
-        }
-        allocateMemory = true;
+   */
+  Float2D(Float2D &_elem, bool shallowCopy)
+      : rows(_elem.rows), cols(_elem.cols) {
+    if (shallowCopy) {
+      elem = _elem.elem;
+    } else {
+      elemStorage = make_managed_uptr<float>(rows * cols);
+      elem = elemStorage.get();
+      for (int i = 0; i < rows * cols; i++) {
+        elem[i] = _elem.elem[i];
       }
     }
+  }
 
-	  ~Float2D() {
-		  if (allocateMemory) {
-		    delete[] elem;
-		  }
-  	}
+  inline float *operator[](int i) { return (elem + (rows * i)); }
 
-	  inline float* operator[](int i) {
-  		return (elem + (rows * i));
-  	}
+  inline float const *operator[](int i) const { return (elem + (rows * i)); }
 
-	  inline float const* operator[](int i) const {
-  		return (elem + (rows * i));
-  	}
+  inline float *elemVector() { return elem; }
 
-	inline float* elemVector() {
-		return elem;
-	}
+  inline int getRows() const { return rows; };
+  inline int getCols() const { return cols; };
 
-        inline int getRows() const { return rows; }; 
-        inline int getCols() const { return cols; }; 
+  inline Float1D getColProxy(int i) {
+    // subarray elem[i][*]:
+    // starting at elem[i][0] with rows elements and unit stride
+    return Float1D(elem + (rows * i), rows);
+  };
 
-	inline Float1D getColProxy(int i) {
-		// subarray elem[i][*]:
-                // starting at elem[i][0] with rows elements and unit stride
-		return Float1D(elem + (rows * i), rows);
-	};
-	
-	inline Float1D getRowProxy(int j) {
-		// subarray elem[*][j]
-                // starting at elem[0][j] with cols elements and stride rows
-		return Float1D(elem + j, cols, rows);
-	};
+  inline Float1D getRowProxy(int j) {
+    // subarray elem[*][j]
+    // starting at elem[0][j] with cols elements and stride rows
+    return Float1D(elem + j, cols, rows);
+  };
 
-  private:
-    int rows;
-    int cols;
-    float* elem;
-	bool allocateMemory;
+private:
+  int rows;
+  int cols;
+  managed_uptr<float> elemStorage;
+  float* elem;
 };
 
 //-------- Methods for Visualistion of Results --------

@@ -89,6 +89,8 @@ class SWE_WaveAccumulationBlock: public SWE_Block {
 
     //computes the net-updates for the block
     void computeNumericalFluxes();
+    //computes the net-updates for the block
+    void computeNumericalFluxesOld();
 
     //update the cells
     void updateUnknowns(float dt);
