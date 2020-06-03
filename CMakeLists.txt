@@ -157,5 +157,7 @@ set_property(TARGET swe-mpi PROPERTY CXX_STANDARD 14)
 set_property(TARGET swe-single-node PROPERTY CXX_STANDARD 14)
 set_property(TARGET swe-research PROPERTY CXX_STANDARD 14)
 
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=address")
+
 # Export compiler commands for use in YouCompleteMe
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
