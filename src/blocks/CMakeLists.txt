@@ -1,6 +1,6 @@
 #Todo: add other solvers
 
-if (NOT ENABLE_CUDA)
+#if (NOT ENABLE_CUDA)
     if (SOLVER STREQUAL "hlle")
         set(SELECTED_SWE_BLOCK_COMPILATION_UNIT SWE_WaveAccumulationBlock.cpp)
         set(SELECTED_SWE_BLOCK_HEADER SWE_WaveAccumulationBlock.hh)
@@ -16,11 +16,18 @@ if (NOT ENABLE_CUDA)
     else()
         message (WARNING "${SOLVER} not recognized!")
     endif()
+#endif()
+
+if (NOT ENABLE_CUDA)
+    set(SELECTED_SWE_CNF SWE_CNF.cpp)
+else()
+    set(SELECTED_SWE_CNF SWE_CNF.cu)
 endif()
 
 target_sources(swe 
     PRIVATE
     SWE_Block.cpp
+    ${SELECTED_SWE_CNF}
     ${SELECTED_SWE_BLOCK_COMPILATION_UNIT}
     PUBLIC
     SWE_Block.hh

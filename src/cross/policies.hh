@@ -22,8 +22,7 @@ using reduce = RAJA::seq_reduce;
 #endif
 
 #ifdef CUDA
-template <bool ExistingRegion, bool NoWait>
-template <bool ExistingRegion, bool NoWait> struct OuterExecPolicy { using type = RAJA::cuda_exec<>; };
+template <bool ExistingRegion, bool NoWait> struct OuterExecPolicy { using type = RAJA::cuda_exec<256>; };
 #else
 #ifdef LOOP_OPENMP
 template <bool ExistingRegion, bool NoWait> struct OuterExecPolicy;
@@ -42,9 +41,9 @@ template <bool ExistingRegion, bool NoWait>
 template <bool ExistingRegion, bool NoWait> struct OuterExecPolicy { using type = RAJA::loop_exec; };
 #endif
 #endif
+#endif
 template <bool ExistingRegion, bool NoWait = false>
 using outer_exec_policy = typename OuterExecPolicy<ExistingRegion, NoWait>::type;
-#endif
 
 #ifdef VECTORIZE
 // Cannot use SIMD safely with current version of RAJA since:

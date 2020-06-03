@@ -29,11 +29,11 @@
 #ifndef __HELP_HH
 #define __HELP_HH
 
+#include "cross/MemoryManager.hh"
 #include <cstring>
-#include <iostream>
 #include <fstream>
+#include <iostream>
 #include <sstream>
-#include "tools/MemoryManager.hh"
 
 /**
  * class Float1D is a proxy class that can represent, for example, 
@@ -121,7 +121,7 @@ public:
      * @param _rows rumber of rows (i.e., elements in vertical directions)
      * @param _elem pointer to a suitably allocated region of memory to be used for thew array elements
    */
-  Float2D(Float2D &_elem, bool shallowCopy)
+  Float2D(const Float2D &_elem, bool shallowCopy = true)
       : rows(_elem.rows), cols(_elem.cols) {
     if (shallowCopy) {
       elem = _elem.elem;

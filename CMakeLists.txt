@@ -54,6 +54,7 @@ endif()
 
 add_subdirectory(src/blocks)
 add_subdirectory(src/blocks/rusanov)
+add_subdirectory(src/cross)
 add_subdirectory(src/scenarios)
 add_subdirectory(src/tools)
 add_subdirectory(src/writer)
@@ -82,6 +83,9 @@ if (MPI_FOUND)
         PRIVATE
         src/examples/swe_mpi.cpp
     )
+    #if (ENABLE_CUDA)
+    #    target_compile_definitions(swe-mpi PUBLIC CUDA)
+    #endif()
     target_link_libraries(swe-mpi PUBLIC swe)
     target_link_libraries(swe-mpi PRIVATE ${MPI_CXX_LIBRARIES})
     target_include_directories(swe-mpi PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
@@ -147,11 +151,11 @@ target_compile_options(swe PUBLIC
 #target_compile_options(swe PUBLIC <$<$ >:-g>) # -Wextra -pedantic)
 
 #C++ Standard
-set_property(TARGET swe PROPERTY CXX_STANDARD 17)
-set_property(TARGET swe PROPERTY CUDA_STANDARD 11)
-set_property(TARGET swe-mpi PROPERTY CXX_STANDARD 17)
-set_property(TARGET swe-single-node PROPERTY CXX_STANDARD 17)
-set_property(TARGET swe-research PROPERTY CXX_STANDARD 17)
+set_property(TARGET swe PROPERTY CXX_STANDARD 14)
+set_property(TARGET swe PROPERTY CUDA_STANDARD 14)
+set_property(TARGET swe-mpi PROPERTY CXX_STANDARD 14)
+set_property(TARGET swe-single-node PROPERTY CXX_STANDARD 14)
+set_property(TARGET swe-research PROPERTY CXX_STANDARD 14)
 
 # Export compiler commands for use in YouCompleteMe
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)

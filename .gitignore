@@ -11,3 +11,6 @@ documentation/doxy/
 .project
 .cproject
 .pydevproject
+
+.idea/
+cmake-build*
