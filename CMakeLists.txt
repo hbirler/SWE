@@ -1,4 +1,7 @@
 cmake_minimum_required(VERSION 3.13)
+if(POLICY CMP0076)
+    cmake_policy(SET CMP0076 NEW)
+endif()
 
 project(SWE LANGUAGES CXX)
 
@@ -16,10 +19,6 @@ set(SOLVER_STRINGS "rusanov" "augRie" "fwave" "hlle")
 set(SOLVER "augRie" CACHE STRING "Default Riemann solver")
 set_property(CACHE SOLVER PROPERTY STRINGS ${SOLVER_STRINGS})
 
-if (ENABLE_CUDA)
-    enable_language(CUDA)
-endif()
-
 if( NOT SOLVER IN_LIST SOLVER_STRINGS)
     message(FATAL_ERROR "solver must be one of ${SOLVER_STRINGS}")
 endif()
@@ -29,7 +28,13 @@ message(STATUS "Using riemann solver ${SOLVER}")
 find_package(NetCDF)
 find_package(OpenMP)
 find_package(MPI)
-find_package(RAJA)
+add_subdirectory(submodules/RAJA)
+
+if (ENABLE_CUDA)
+    enable_language(CUDA)
+    # for raja
+    set (CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --expt-extended-lambda")
+endif()
 
 add_executable(swe-single-node)
 add_executable(swe-research)
