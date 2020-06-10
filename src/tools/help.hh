@@ -140,6 +140,7 @@ public:
 
   inline float *elemVector() { return elem; }
 
+  inline float* data() const { return elem; }
   inline int getRows() const { return rows; };
   inline int getCols() const { return cols; };
 

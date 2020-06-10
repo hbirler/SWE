@@ -62,6 +62,7 @@ add_subdirectory(src/solvers)
 
 if (ENABLE_CUDA)
     target_compile_definitions(swe PUBLIC CUDA)
+    target_compile_definitions(swe-research PUBLIC CUDA)
     add_subdirectory(src/blocks/cuda)
 endif()
 
@@ -72,10 +73,11 @@ target_sources(swe-single-node
 
 target_sources(swe-research
     PRIVATE
-    src/examples/swe_research.cpp
+        src/examples/swe_research.cu
 )
     
 target_link_libraries(swe-single-node PUBLIC swe)
+target_link_libraries(swe-research PUBLIC swe)
 
 if (MPI_FOUND)
     add_executable(swe-mpi)
@@ -157,7 +159,7 @@ set_property(TARGET swe-mpi PROPERTY CXX_STANDARD 14)
 set_property(TARGET swe-single-node PROPERTY CXX_STANDARD 14)
 set_property(TARGET swe-research PROPERTY CXX_STANDARD 14)
 
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=address")
+#set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=address")
 
 # Export compiler commands for use in YouCompleteMe
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)

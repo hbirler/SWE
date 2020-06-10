@@ -41,15 +41,7 @@
 // *** SWE_WaveAccumulationBlock only supports the following wave propagation solvers:
 //  2: Approximate Augmented Riemann solver (functional implementation: AugRieFun)
 //  4: f-Wave (vectorized implementation: FWaveVec) 
-#if defined(SOLVER_AUGRIE)
-#include "solvers/AugRieFun.hpp"
-#elif defined(SOLVER_HLLE)
-#include "solvers/HLLEFun.hpp"
-#elif defined(SOLVER_FWAVE)
-#include "solvers/FWaveVec.hpp"
-#else
-#error chosen wave propagation solver not supported by SWE_WaveAccumulationBlock
-#endif
+//#include "solvers/AugRieRaja.hpp"
 
 /**
  * SWE_WaveAccumulationBlock is an implementation of the SWE_Block abstract class.
@@ -60,17 +52,6 @@
  *  (details can be found in the corresponding source files)
  */
 class SWE_WaveAccumulationBlock: public SWE_Block {
-
-#if defined(SOLVER_AUGRIE)
-    //! Approximate Augmented Riemann solver
-    solver::AugRieFun<float> wavePropagationSolver;
-#elif defined(SOLVER_HLLE)
-    //! Vectorized FWave solver
-    solver::HLLEFun<float> wavePropagationSolver;
-#elif defined(SOLVER_FWAVE)
-    //! Vectorized FWave solver
-    solver::FWaveVec<float> wavePropagationSolver;
-#endif
 
     //! net-updates for the heights of the cells (for accumulation)
     Float2D hNetUpdates;

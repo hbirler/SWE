@@ -95,9 +95,9 @@ void SWE_WaveAccumulationBlock::computeNumericalFluxesOld() {
         float hNetUpLeft, hNetUpRight;
         float huNetUpLeft, huNetUpRight;
 
-        wavePropagationSolver.computeNetUpdates(
-            h[i - 1][j], h[i][j], hu[i - 1][j], hu[i][j], b[i - 1][j], b[i][j],
-            hNetUpLeft, hNetUpRight, huNetUpLeft, huNetUpRight, maxEdgeSpeed);
+        //wavePropagationSolver.computeNetUpdates(
+        //    h[i - 1][j], h[i][j], hu[i - 1][j], hu[i][j], b[i - 1][j], b[i][j],
+        //    hNetUpLeft, hNetUpRight, huNetUpLeft, huNetUpRight, maxEdgeSpeed);
 
         // accumulate net updates to cell-wise net updates for h and hu
         hNetUpdates[i - 1][j] += dx_inv * hNetUpLeft;
@@ -134,9 +134,9 @@ void SWE_WaveAccumulationBlock::computeNumericalFluxesOld() {
         float hNetUpDow, hNetUpUpw;
         float hvNetUpDow, hvNetUpUpw;
 
-        wavePropagationSolver.computeNetUpdates(
-            h[i][j - 1], h[i][j], hv[i][j - 1], hv[i][j], b[i][j - 1], b[i][j],
-            hNetUpDow, hNetUpUpw, hvNetUpDow, hvNetUpUpw, maxEdgeSpeed);
+        //wavePropagationSolver.computeNetUpdates(
+        //    h[i][j - 1], h[i][j], hv[i][j - 1], hv[i][j], b[i][j - 1], b[i][j],
+        //    hNetUpDow, hNetUpUpw, hvNetUpDow, hvNetUpUpw, maxEdgeSpeed);
 
         // accumulate net updates to cell-wise net updates for h and hu
         hNetUpdates[i][j - 1] += dy_inv * hNetUpDow;

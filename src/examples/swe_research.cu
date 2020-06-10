@@ -9,7 +9,7 @@
 #include <cstring>
 #include <iostream>
 
-#include "util/MemoryManager.hh"
+#include "cross/MemoryManager.hh"
 
 #include <RAJA/RAJA.hpp>
 
@@ -54,14 +54,14 @@ int main(int RAJA_UNUSED_ARG(argc), char **RAJA_UNUSED_ARG(argv[]))
 //
 // Define vector length
 //
-  const int N = 1000000;
+  const int N = 1;
 
 //
 // Allocate and initialize vector data
 //
-  int *a = memoryManager::allocate<int>(N);
-  int *b = memoryManager::allocate<int>(N);
-  int *c = memoryManager::allocate<int>(N);
+  int *a = swe_alloc<int>(N);
+  int *b = swe_alloc<int>(N);
+  int *c = swe_alloc<int>(N);
 
   for (int i = 0; i < N; ++i) {
     a[i] = -i;
@@ -193,9 +193,9 @@ int main(int RAJA_UNUSED_ARG(argc), char **RAJA_UNUSED_ARG(argv[]))
 //
 // Clean up.
 //
-  memoryManager::deallocate(a);
-  memoryManager::deallocate(b);
-  memoryManager::deallocate(c);
+  swe_free(a);
+  swe_free(b);
+  swe_free(c);
 
   std::cout << "\n DONE!...\n";
 

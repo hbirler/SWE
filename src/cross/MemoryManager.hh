@@ -4,7 +4,12 @@
 #include <memory>
 #include <type_traits>
 
+
 void* swe_alloc(size_t alignment, size_t elem, size_t count);
+template <typename T>
+T* swe_alloc(size_t count) {
+  return reinterpret_cast<T*>(swe_alloc(alignof(T), sizeof(T), count));
+}
 void swe_free(void* ptr);
 
 struct SWEFree {
@@ -14,8 +19,8 @@ struct SWEFree {
 template <typename T>
 using managed_uptr = std::unique_ptr<T[], SWEFree>;
 
-template <typename T> managed_uptr<T> make_managed_uptr(size_t size) {
-  return managed_uptr<T>((T*)swe_alloc(alignof(T), sizeof(T), size));
+template <typename T> managed_uptr<T> make_managed_uptr(size_t count) {
+  return managed_uptr<T>(swe_alloc<T>(count));
 }
 
 /*
