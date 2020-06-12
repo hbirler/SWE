@@ -60,7 +60,7 @@ void SWE_WaveAccumulationBlock::computeNumericalFluxes() {
           constexpr unsigned hNetUpDow = 0, hNetUpUpw = 1, hvNetUpDow = 2, hvNetUpUpw = 3, maxEdgeSpeed = 4;
           float l_netUpdates[5];
 
-          augRieComputeNetUpdates (h(i, j - 1), h(i, j), hu(i, j - 1), hu(i, j), b(i, j - 1), b(i, j),
+          augRieComputeNetUpdates (h(i, j - 1), h(i, j), hv(i, j - 1), hv(i, j), b(i, j - 1), b(i, j),
                              static_cast<real>(9.81), static_cast<real>(0.01), static_cast<real>(0.000001), static_cast<real>(0.0001), 10,
                              l_netUpdates);
           //wavePropagationSolver.computeNetUpdates(

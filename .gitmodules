@@ -1,6 +1,6 @@
 [submodule "submodules/swe_solvers"]
 	path = submodules/swe_solvers
-	url = https://github.com/TUM-I5/swe_solvers.git
+	url = https://github.com/hbirler/swe_solvers.git
 [submodule "submodules/RAJA"]
 	path = submodules/RAJA
 	url = https://github.com/LLNL/RAJA.git

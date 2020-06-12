@@ -66,15 +66,15 @@ class SWE_WaveAccumulationBlock: public SWE_Block {
     //constructor of a SWE_WaveAccumulationBlock.
     SWE_WaveAccumulationBlock(int l_nx, int l_ny, float l_dx, float l_dy);
     //destructor of a SWE_WaveAccumulationBlock.
-    virtual ~SWE_WaveAccumulationBlock() {}
+    virtual ~SWE_WaveAccumulationBlock() override {}
 
     //computes the net-updates for the block
     void computeNumericalFluxes();
     //computes the net-updates for the block
-    void computeNumericalFluxesOld();
+    //void computeNumericalFluxesOld();
 
     //update the cells
-    void updateUnknowns(float dt);
+    void updateUnknowns(float dt) override;
 
     //updates the bathymetry with the current displacment values
 #ifdef DYNAMIC_DISPLACEMENTS

@@ -64,7 +64,7 @@ SWE_WaveAccumulationBlock::SWE_WaveAccumulationBlock(
  * The member variable #maxTimestep will be updated with the 
  * maximum allowed time step size
  */
-void SWE_WaveAccumulationBlock::computeNumericalFluxesOld() {
+/*void SWE_WaveAccumulationBlock::computeNumericalFluxesOld() {
 
   float dx_inv = 1.0f / dx;
   float dy_inv = 1.0f / dy;
@@ -177,7 +177,7 @@ void SWE_WaveAccumulationBlock::computeNumericalFluxesOld() {
     // might happen in dry cells
     maxTimestep = std::numeric_limits<float>::max();
 }
-
+*/
 /**
  * Updates the unknowns with the already computed net-updates.
  *
