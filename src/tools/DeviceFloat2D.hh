@@ -3,7 +3,6 @@
 
 #include <memory>
 #include <cstdint>
-#include <RAJA/RAJA.hpp>
 #include "cross/MemoryManager.hh"
 #include "tools/help.hh"
 
@@ -53,35 +52,47 @@ private:
   void updateCpuData() const;
   void updateDevice();
 public:
-  class CPUViewBase {
+  class ViewBase {
   protected:
-    /// Number of columns
-    int cols;
+    /// The data
+    float* data;
     /// Number of rows
     int rows;
-    /// The data on cpu
-    float* cpuData;
     /// Constructor
-    CPUViewBase(int cols, int rows, float* cpuData);
-
+    ViewBase(int rows, float* data);
 
     Float1D getProxy(int offset, int rows, int stride = 1) const {
-      return Float1D(cpuData + offset, rows, stride);
+      return Float1D(data + offset, rows, stride);
     };
 
     friend class DeviceFloat2D;
     friend class BackedFloat1D;
   public:
-    ~CPUViewBase();
+    ViewBase(const ViewBase &) = default;
+    ViewBase(ViewBase &&) = default;
+    ~ViewBase() = default;
   };
 
   template <bool Mutable>
-  class CPUView : public CPUViewBase {
+  class LightView {
+    /// The data on cpu
+    float* data;
   public:
-    maybe_const_t<float, !Mutable>* operator()(int i) const { return cpuData + i * rows; }
-    maybe_const_ref_t<float, !Mutable> operator()(int i, int j) const { return *(cpuData + i * rows + j); }
-    CPUView(int cols, int rows, float* cpuData) : CPUViewBase(cols, rows, cpuData) {}
+    maybe_const_t<float, !Mutable>* operator()(int rows, int i) const { return data + i * rows; }
+    maybe_const_ref_t<float, !Mutable> operator()(int rows, int i, int j) const { return *(data + i * rows + j); }
+    LightView(float* data) : data(data) {}
   };
+
+  template <bool Mutable>
+  class View : public ViewBase {
+  public:
+    maybe_const_t<float, !Mutable>* operator()(int i) const { return data + i * rows; }
+    maybe_const_ref_t<float, !Mutable> operator()(int i, int j) const { return *(data + i * rows + j); }
+    View(int rows, float* cpuData) : ViewBase(rows, cpuData) {}
+
+    LightView<Mutable> asLight() const { return {data}; }
+  };
+
 
   /// Constructor
   DeviceFloat2D(int cols, int rows);
@@ -97,11 +108,11 @@ public:
   BackedFloat1D getRowProxy(int j) const;
 
   /// Get single-use CPU view that is readonly
-  CPUView<false> getReadonlyCPUView() const;
+  View<false> getReadonlyCPUView() const;
   /// Get single-use CPU view that is mutable
-  CPUView<true> getMutableCPUView();
+  View<true> getMutableCPUView();
   /// Get single-use device view
-  RAJA::View<float, RAJA::Layout<2>> getDeviceView();
+  View<true> getDeviceView();
 
   inline int getRows() const { return rows; };
   inline int getCols() const { return cols; };
@@ -109,7 +120,7 @@ public:
 
 
 
-using ViewF2D = DeviceFloat2D::CPUView<false>;
-using ViewF2DMutable = DeviceFloat2D::CPUView<true>;
+using ViewF2D = DeviceFloat2D::View<false>;
+using ViewF2DMutable = DeviceFloat2D::View<true>;
 
 #endif

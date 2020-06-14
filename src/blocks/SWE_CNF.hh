@@ -14,16 +14,20 @@ void SWE_WaveAccumulationBlock::computeNumericalFluxes() {
 
   RAJA::ReduceMax<policies::reduce, float> maxWaveSpeed(0.0f);
 
-   auto hNetUpdatesL =  this->hNetUpdatesL.getDeviceView();
-  auto huNetUpdatesL = this->huNetUpdatesL.getDeviceView();
-  auto hvNetUpdatesL = this->hvNetUpdatesL.getDeviceView();
-   auto hNetUpdatesR =  this->hNetUpdatesR.getDeviceView();
-  auto huNetUpdatesR = this->huNetUpdatesR.getDeviceView();
-  auto hvNetUpdatesR = this->hvNetUpdatesR.getDeviceView();
-  auto h = this->h.getDeviceView();
-  auto hu = this->hu.getDeviceView();
-  auto hv = this->hv.getDeviceView();
-  auto b = this->b.getDeviceView();
+  // We assume all the sizes are the same
+
+   auto hNetUpdatesL =  this->hNetUpdatesL.getDeviceView().asLight();
+  auto huNetUpdatesL = this->huNetUpdatesL.getDeviceView().asLight();
+  auto hvNetUpdatesL = this->hvNetUpdatesL.getDeviceView().asLight();
+   auto hNetUpdatesR =  this->hNetUpdatesR.getDeviceView().asLight();
+  auto huNetUpdatesR = this->huNetUpdatesR.getDeviceView().asLight();
+  auto hvNetUpdatesR = this->hvNetUpdatesR.getDeviceView().asLight();
+  auto h = this->h.getDeviceView().asLight();
+  auto hu = this->hu.getDeviceView().asLight();
+  auto hv = this->hv.getDeviceView().asLight();
+  auto b = this->b.getDeviceView().asLight();
+
+  auto rows = this->h.getRows();
 
   RAJA::region<policies::region>([=]() {
     RAJA::ReduceMax<policies::reduce, float> l_maxWaveSpeed(0.0f);
@@ -33,15 +37,15 @@ void SWE_WaveAccumulationBlock::computeNumericalFluxes() {
           constexpr unsigned hNetUpLeft = 0, hNetUpRight = 1, huNetUpLeft = 2, huNetUpRight = 3, maxEdgeSpeed = 4;
           float l_netUpdates[5];
 
-          augRieComputeNetUpdates (h(i - 1, j), h(i, j), hu(i - 1, j), hu(i, j), b(i - 1, j), b(i, j),
+          augRieComputeNetUpdates (h(rows, i - 1, j), h(rows, i, j), hu(rows, i - 1, j), hu(rows, i, j), b(rows, i - 1, j), b(rows, i, j),
               static_cast<real>(9.81), static_cast<real>(0.01), static_cast<real>(0.000001), static_cast<real>(0.0001), 10,
               l_netUpdates);
 
           // accumulate net updates to cell-wise net updates for h and hu
-          hNetUpdatesL(i - 1, j) += dx_inv * l_netUpdates[hNetUpLeft];
-          huNetUpdatesL(i - 1, j) += dx_inv * l_netUpdates[huNetUpLeft];
-          hNetUpdatesR(i, j) += dx_inv * l_netUpdates[hNetUpRight];
-          huNetUpdatesR(i, j) += dx_inv * l_netUpdates[huNetUpRight];
+          hNetUpdatesL(rows, i - 1, j) += dx_inv * l_netUpdates[hNetUpLeft];
+          huNetUpdatesL(rows, i - 1, j) += dx_inv * l_netUpdates[huNetUpLeft];
+          hNetUpdatesR(rows, i, j) += dx_inv * l_netUpdates[hNetUpRight];
+          huNetUpdatesR(rows, i, j) += dx_inv * l_netUpdates[huNetUpRight];
 
           l_maxWaveSpeed.combine(l_netUpdates[maxEdgeSpeed]);
         });
@@ -51,15 +55,15 @@ void SWE_WaveAccumulationBlock::computeNumericalFluxes() {
           constexpr unsigned hNetUpDow = 0, hNetUpUpw = 1, hvNetUpDow = 2, hvNetUpUpw = 3, maxEdgeSpeed = 4;
           float l_netUpdates[5];
 
-          augRieComputeNetUpdates (h(i, j - 1), h(i, j), hv(i, j - 1), hv(i, j), b(i, j - 1), b(i, j),
+          augRieComputeNetUpdates (h(rows, i, j - 1), h(rows, i, j), hv(rows, i, j - 1), hv(rows, i, j), b(rows, i, j - 1), b(rows, i, j),
                              static_cast<real>(9.81), static_cast<real>(0.01), static_cast<real>(0.000001), static_cast<real>(0.0001), 10,
                              l_netUpdates);
 
           // accumulate net updates to cell-wise net updates for h and hu
-          hNetUpdatesL(i, j - 1) += dy_inv * l_netUpdates[hNetUpDow];
-          hvNetUpdatesL(i, j - 1) += dy_inv * l_netUpdates[hvNetUpDow];
-          hNetUpdatesR(i, j) += dy_inv * l_netUpdates[hNetUpUpw];
-          hvNetUpdatesR(i, j) += dy_inv * l_netUpdates[hvNetUpUpw];
+          hNetUpdatesL(rows, i, j - 1) += dy_inv * l_netUpdates[hNetUpDow];
+          hvNetUpdatesL(rows, i, j - 1) += dy_inv * l_netUpdates[hvNetUpDow];
+          hNetUpdatesR(rows, i, j) += dy_inv * l_netUpdates[hNetUpUpw];
+          hvNetUpdatesR(rows, i, j) += dy_inv * l_netUpdates[hvNetUpUpw];
 
           l_maxWaveSpeed.combine(l_netUpdates[maxEdgeSpeed]);
         });
@@ -93,36 +97,38 @@ void SWE_WaveAccumulationBlock::computeNumericalFluxes() {
  * @param dt time step width used in the update.
  */
 void SWE_WaveAccumulationBlock::updateUnknowns(float dt) {
-  auto hNetUpdatesL =  this->hNetUpdatesL.getDeviceView();
-  auto huNetUpdatesL = this->huNetUpdatesL.getDeviceView();
-  auto hvNetUpdatesL = this->hvNetUpdatesL.getDeviceView();
-  auto hNetUpdatesR =  this->hNetUpdatesR.getDeviceView();
-  auto huNetUpdatesR = this->huNetUpdatesR.getDeviceView();
-  auto hvNetUpdatesR = this->hvNetUpdatesR.getDeviceView();
-  auto h = this->h.getDeviceView();
-  auto hu = this->hu.getDeviceView();
-  auto hv = this->hv.getDeviceView();
+  auto hNetUpdatesL =  this->hNetUpdatesL.getDeviceView().asLight();
+  auto huNetUpdatesL = this->huNetUpdatesL.getDeviceView().asLight();
+  auto hvNetUpdatesL = this->hvNetUpdatesL.getDeviceView().asLight();
+  auto hNetUpdatesR =  this->hNetUpdatesR.getDeviceView().asLight();
+  auto huNetUpdatesR = this->huNetUpdatesR.getDeviceView().asLight();
+  auto hvNetUpdatesR = this->hvNetUpdatesR.getDeviceView().asLight();
+  auto h = this->h.getDeviceView().asLight();
+  auto hu = this->hu.getDeviceView().asLight();
+  auto hv = this->hv.getDeviceView().asLight();
+
+  auto rows = this->h.getRows();
 
   RAJA::kernel<policies::loop_2d<>>(
       RAJA::make_tuple(RAJA::RangeSegment(1, nx + 1), RAJA::RangeSegment(1, ny + 1)), [=] RAJA_HOST_DEVICE (size_t i, size_t j) {
-        h(i, j)  -= dt * (hNetUpdatesL(i, j) + hNetUpdatesR(i, j));
-        hu(i, j) -= dt * (huNetUpdatesL(i, j) + huNetUpdatesR(i, j));
-        hv(i, j) -= dt * (hvNetUpdatesL(i, j) + hvNetUpdatesR(i, j));
+        h(rows, i, j)  -= dt * (hNetUpdatesL(rows, i, j) + hNetUpdatesR(rows, i, j));
+        hu(rows, i, j) -= dt * (huNetUpdatesL(rows, i, j) + huNetUpdatesR(rows, i, j));
+        hv(rows, i, j) -= dt * (hvNetUpdatesL(rows, i, j) + hvNetUpdatesR(rows, i, j));
 
-         hNetUpdatesL(i, j) = (float) 0;
-        huNetUpdatesL(i, j) = (float) 0;
-        hvNetUpdatesL(i, j) = (float) 0;
-         hNetUpdatesR(i, j) = (float) 0;
-        huNetUpdatesR(i, j) = (float) 0;
-        hvNetUpdatesR(i, j) = (float) 0;
+         hNetUpdatesL(rows, i, j) = (float) 0;
+        huNetUpdatesL(rows, i, j) = (float) 0;
+        hvNetUpdatesL(rows, i, j) = (float) 0;
+         hNetUpdatesR(rows, i, j) = (float) 0;
+        huNetUpdatesR(rows, i, j) = (float) 0;
+        hvNetUpdatesR(rows, i, j) = (float) 0;
 
         //TODO: proper dryTol
-        if (h(i, j) < 0.1)
-          hu(i, j) = hv(i, j) = 0.; //no water, no speed!
+        if (h(rows, i, j) < 0.1)
+          hu(rows, i, j) = hv(rows, i, j) = 0.; //no water, no speed!
 
-        if (h(i, j) < 0) {
+        if (h(rows, i, j) < 0) {
           //zero (small) negative depths
-          h(i, j) = (float) 0;
+          h(rows, i, j) = (float) 0;
         }
       });
 }

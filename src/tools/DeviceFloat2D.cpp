@@ -1,10 +1,8 @@
 #include "DeviceFloat2D.hh"
 
-DeviceFloat2D::CPUViewBase::CPUViewBase(int cols, int rows, float *cpuData)
-  :cols(cols), rows(rows), cpuData(cpuData) {
+DeviceFloat2D::ViewBase::ViewBase(int rows, float *data)
+  :data(data), rows(rows) {
 }
-
-DeviceFloat2D::CPUViewBase::~CPUViewBase() = default;
 
 DeviceFloat2D::DeviceFloat2D(int cols, int rows) : cols(cols), rows(rows), data(swe_alloc<float>(cols * rows)) {}
 
@@ -27,20 +25,20 @@ void DeviceFloat2D::updateDevice() {
   }
 }
 
-DeviceFloat2D::CPUView<false> DeviceFloat2D::getReadonlyCPUView() const {
+DeviceFloat2D::View<false> DeviceFloat2D::getReadonlyCPUView() const {
   updateCpuData();
-  return DeviceFloat2D::CPUView<false>(cols, rows, cpuData);
+  return DeviceFloat2D::View<false>(rows, cpuData);
 }
 
-DeviceFloat2D::CPUView<true> DeviceFloat2D::getMutableCPUView() {
+DeviceFloat2D::View<true> DeviceFloat2D::getMutableCPUView() {
   updateCpuData();
   cpuVersion++;
-  return DeviceFloat2D::CPUView<true>(cols, rows, cpuData);
+  return DeviceFloat2D::View<true>(rows, cpuData);
 }
-RAJA::View<float, RAJA::Layout<2>> DeviceFloat2D::getDeviceView() {
+DeviceFloat2D::View<true> DeviceFloat2D::getDeviceView() {
   updateDevice();
   deviceVersion++;
-  return RAJA::View<float, RAJA::Layout<2>>(data, cols, rows);
+  return DeviceFloat2D::View<true>(rows, data);
 }
 
 /*BackedFloat1D getColProxy(int i) const {
