@@ -14,9 +14,12 @@ void SWE_WaveAccumulationBlock::computeNumericalFluxes() {
 
   RAJA::ReduceMax<policies::reduce, float> maxWaveSpeed(0.0f);
 
-  auto hNetUpdates = this->hNetUpdates.getDeviceView();
-  auto huNetUpdates = this->huNetUpdates.getDeviceView();
-  auto hvNetUpdates = this->hvNetUpdates.getDeviceView();
+   auto hNetUpdatesL =  this->hNetUpdatesL.getDeviceView();
+  auto huNetUpdatesL = this->huNetUpdatesL.getDeviceView();
+  auto hvNetUpdatesL = this->hvNetUpdatesL.getDeviceView();
+   auto hNetUpdatesR =  this->hNetUpdatesR.getDeviceView();
+  auto huNetUpdatesR = this->huNetUpdatesR.getDeviceView();
+  auto hvNetUpdatesR = this->hvNetUpdatesR.getDeviceView();
   auto h = this->h.getDeviceView();
   auto hu = this->hu.getDeviceView();
   auto hv = this->hv.getDeviceView();
@@ -35,10 +38,10 @@ void SWE_WaveAccumulationBlock::computeNumericalFluxes() {
               l_netUpdates);
 
           // accumulate net updates to cell-wise net updates for h and hu
-          hNetUpdates(i - 1, j) += dx_inv * l_netUpdates[hNetUpLeft];
-          huNetUpdates(i - 1, j) += dx_inv * l_netUpdates[huNetUpLeft];
-          hNetUpdates(i, j) += dx_inv * l_netUpdates[hNetUpRight];
-          huNetUpdates(i, j) += dx_inv * l_netUpdates[huNetUpRight];
+          hNetUpdatesL(i - 1, j) += dx_inv * l_netUpdates[hNetUpLeft];
+          huNetUpdatesL(i - 1, j) += dx_inv * l_netUpdates[huNetUpLeft];
+          hNetUpdatesR(i, j) += dx_inv * l_netUpdates[hNetUpRight];
+          huNetUpdatesR(i, j) += dx_inv * l_netUpdates[huNetUpRight];
 
           l_maxWaveSpeed.combine(l_netUpdates[maxEdgeSpeed]);
         });
@@ -53,10 +56,10 @@ void SWE_WaveAccumulationBlock::computeNumericalFluxes() {
                              l_netUpdates);
 
           // accumulate net updates to cell-wise net updates for h and hu
-          hNetUpdates(i, j - 1) += dy_inv * l_netUpdates[hNetUpDow];
-          hvNetUpdates(i, j - 1) += dy_inv * l_netUpdates[hvNetUpDow];
-          hNetUpdates(i, j) += dy_inv * l_netUpdates[hNetUpUpw];
-          hvNetUpdates(i, j) += dy_inv * l_netUpdates[hvNetUpUpw];
+          hNetUpdatesL(i, j - 1) += dy_inv * l_netUpdates[hNetUpDow];
+          hvNetUpdatesL(i, j - 1) += dy_inv * l_netUpdates[hvNetUpDow];
+          hNetUpdatesR(i, j) += dy_inv * l_netUpdates[hNetUpUpw];
+          hvNetUpdatesR(i, j) += dy_inv * l_netUpdates[hvNetUpUpw];
 
           l_maxWaveSpeed.combine(l_netUpdates[maxEdgeSpeed]);
         });
@@ -90,22 +93,28 @@ void SWE_WaveAccumulationBlock::computeNumericalFluxes() {
  * @param dt time step width used in the update.
  */
 void SWE_WaveAccumulationBlock::updateUnknowns(float dt) {
-  auto hNetUpdates = this->hNetUpdates.getDeviceView();
-  auto huNetUpdates = this->huNetUpdates.getDeviceView();
-  auto hvNetUpdates = this->hvNetUpdates.getDeviceView();
+  auto hNetUpdatesL =  this->hNetUpdatesL.getDeviceView();
+  auto huNetUpdatesL = this->huNetUpdatesL.getDeviceView();
+  auto hvNetUpdatesL = this->hvNetUpdatesL.getDeviceView();
+  auto hNetUpdatesR =  this->hNetUpdatesR.getDeviceView();
+  auto huNetUpdatesR = this->huNetUpdatesR.getDeviceView();
+  auto hvNetUpdatesR = this->hvNetUpdatesR.getDeviceView();
   auto h = this->h.getDeviceView();
   auto hu = this->hu.getDeviceView();
   auto hv = this->hv.getDeviceView();
 
   RAJA::kernel<policies::loop_2d<>>(
       RAJA::make_tuple(RAJA::RangeSegment(1, nx + 1), RAJA::RangeSegment(1, ny + 1)), [=] RAJA_HOST_DEVICE (size_t i, size_t j) {
-        h(i, j)  -= dt * hNetUpdates(i, j);
-        hu(i, j) -= dt * huNetUpdates(i, j);
-        hv(i, j) -= dt * hvNetUpdates(i, j);
+        h(i, j)  -= dt * (hNetUpdatesL(i, j) + hNetUpdatesR(i, j));
+        hu(i, j) -= dt * (huNetUpdatesL(i, j) + huNetUpdatesR(i, j));
+        hv(i, j) -= dt * (hvNetUpdatesL(i, j) + hvNetUpdatesR(i, j));
 
-        hNetUpdates(i, j) = (float) 0;
-        huNetUpdates(i, j) = (float) 0;
-        hvNetUpdates(i, j) = (float) 0;
+         hNetUpdatesL(i, j) = (float) 0;
+        huNetUpdatesL(i, j) = (float) 0;
+        hvNetUpdatesL(i, j) = (float) 0;
+         hNetUpdatesR(i, j) = (float) 0;
+        huNetUpdatesR(i, j) = (float) 0;
+        hvNetUpdatesR(i, j) = (float) 0;
 
         //TODO: proper dryTol
         if (h(i, j) < 0.1)

@@ -54,9 +54,12 @@ SWE_WaveAccumulationBlock::SWE_WaveAccumulationBlock(
 		int l_nx, int l_ny,
 		float l_dx, float l_dy):
   SWE_Block(l_nx, l_ny, l_dx, l_dy),
-  hNetUpdates (nx+2, ny+2),
-  huNetUpdates(nx+2, ny+2),
-  hvNetUpdates(nx+2, ny+2)
+  hNetUpdatesL (nx+2, ny+2),
+  hNetUpdatesR (nx+2, ny+2),
+  huNetUpdatesL(nx+2, ny+2),
+  huNetUpdatesR(nx+2, ny+2),
+  hvNetUpdatesL(nx+2, ny+2),
+  hvNetUpdatesR(nx+2, ny+2)
 {}
 
 /**
