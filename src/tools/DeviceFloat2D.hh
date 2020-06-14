@@ -5,6 +5,7 @@
 #include <cstdint>
 #include "cross/MemoryManager.hh"
 #include "tools/help.hh"
+#include <RAJA/util/macros.hpp>
 
 template <typename T, bool IsConst> struct MaybeConstRef;
 template <typename T> struct MaybeConstRef<T, true> { using type = const T&; };
@@ -78,16 +79,16 @@ public:
     /// The data on cpu
     float* data;
   public:
-    maybe_const_t<float, !Mutable>* operator()(int rows, int i) const { return data + i * rows; }
-    maybe_const_ref_t<float, !Mutable> operator()(int rows, int i, int j) const { return *(data + i * rows + j); }
+    RAJA_HOST_DEVICE RAJA_INLINE maybe_const_t<float, !Mutable>* operator()(int rows, int i) const { return data + i * rows; }
+    RAJA_HOST_DEVICE RAJA_INLINE maybe_const_ref_t<float, !Mutable> operator()(int rows, int i, int j) const { return *(data + i * rows + j); }
     LightView(float* data) : data(data) {}
   };
 
   template <bool Mutable>
   class View : public ViewBase {
   public:
-    maybe_const_t<float, !Mutable>* operator()(int i) const { return data + i * rows; }
-    maybe_const_ref_t<float, !Mutable> operator()(int i, int j) const { return *(data + i * rows + j); }
+    RAJA_HOST_DEVICE RAJA_INLINE maybe_const_t<float, !Mutable>* operator()(int i) const { return data + i * rows; }
+    RAJA_HOST_DEVICE RAJA_INLINE maybe_const_ref_t<float, !Mutable> operator()(int i, int j) const { return *(data + i * rows + j); }
     View(int rows, float* cpuData) : ViewBase(rows, cpuData) {}
 
     LightView<Mutable> asLight() const { return {data}; }
