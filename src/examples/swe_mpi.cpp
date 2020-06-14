@@ -34,6 +34,7 @@
 #include <mpi.h>
 #include <string>
 #include <vector>
+#include <chrono>
 
 #include "blocks/SWE_Block.hh"
 
@@ -394,7 +395,7 @@ int main( int argc, char** argv ) {
   // print the start message and reset the wall clock time
   progressBar.clear();
   tools::Logger::logger.printStartMessage();
-  tools::Logger::logger.initWallClockTime(time(NULL));
+  tools::Logger::logger.initWallClockTime(std::chrono::duration<double>(std::chrono::high_resolution_clock::now().time_since_epoch()).count());
 
   //! simulation time.
   float l_t = 0.0;
@@ -492,7 +493,7 @@ int main( int argc, char** argv ) {
   tools::Logger::logger.printTime("CpuCommunication", "CPU + Communication time");
 
   // print the wall clock time (includes plotting)
-  tools::Logger::logger.printWallClockTime(time(NULL));
+  tools::Logger::logger.printWallClockTime(std::chrono::duration<double>(std::chrono::high_resolution_clock::now().time_since_epoch()).count());
 
   // printer iteration counter
   tools::Logger::logger.printIterationsDone(l_iterations);

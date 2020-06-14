@@ -53,6 +53,7 @@ add_subdirectory(src/solvers)
 if (ENABLE_CUDA)
     target_compile_definitions(swe PUBLIC CUDA)
     add_subdirectory(src/blocks/cuda)
+    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --expt-extended-lambda -gencode arch=compute_60,code=sm_60")
 endif()
 
 target_sources(swe-single-node 
