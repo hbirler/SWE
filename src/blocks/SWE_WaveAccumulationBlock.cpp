@@ -178,11 +178,13 @@ SWE_WaveAccumulationBlock::SWE_WaveAccumulationBlock(
     maxTimestep = std::numeric_limits<float>::max();
 }
 */
+
 /**
  * Updates the unknowns with the already computed net-updates.
  *
  * @param dt time step width used in the update.
  */
+ /*
 void SWE_WaveAccumulationBlock::updateUnknowns(float dt) {
 
   //update cell averages with the net-updates
@@ -224,7 +226,7 @@ void SWE_WaveAccumulationBlock::updateUnknowns(float dt) {
 		}
 	}
 }
-
+*/
 /**
  * Update the bathymetry values with the displacement corresponding to the current time step.
  *
