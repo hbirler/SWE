@@ -103,8 +103,8 @@ public:
   /// Get single-use device view
   RAJA::View<float, RAJA::Layout<2>> getDeviceView();
 
-  constexpr int getRows() const { return rows; };
-  constexpr int getCols() const { return cols; };
+  inline int getRows() const { return rows; };
+  inline int getCols() const { return cols; };
 };
 
 
