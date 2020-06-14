@@ -32,11 +32,12 @@
 #include "tools/help.hh"
 #include "scenarios/SWE_Scenario.hh"
 
-#include <iostream>
 #include <fstream>
+#include <iostream>
 #include <memory>
+#include <tools/DeviceFloat2D.hh>
 
-//using namespace std;
+// using namespace std;
 
 // forward declaration
 struct SWE_Block1D;
@@ -132,13 +133,13 @@ class SWE_Block {
     
     // read access to arrays of unknowns
     /// provides read access to the water height array 
-    const Float2D& getWaterHeight();
+    const DeviceFloat2D& getWaterHeight();
     /// provides read access to the momentum/discharge array (x-component) 
-    const Float2D& getDischarge_hu();
+    const DeviceFloat2D& getDischarge_hu();
     /// provides read access to the momentum/discharge array (y-component) 
-    const Float2D& getDischarge_hv();
+    const DeviceFloat2D& getDischarge_hv();
     /// provides read access to the bathymetry data 
-    const Float2D& getBathymetry();
+    const DeviceFloat2D& getBathymetry();
 
     // defining boundary conditions
     /// set type of boundary condition for the specified boundary
@@ -234,10 +235,10 @@ class SWE_Block {
     // define arrays for unknowns: 
     // h (water level) and u,v (velocity in x and y direction)
     // hd, ud, and vd are respective CUDA arrays on GPU
-    Float2D h;	///< array that holds the water height for each element
-    Float2D hu; ///< array that holds the x-component of the momentum for each element (water height h multiplied by velocity in x-direction)
-    Float2D hv; ///< array that holds the y-component of the momentum for each element (water height h multiplied by velocity in y-direction)
-    Float2D b;  ///< array that holds the bathymetry data (sea floor elevation) for each element
+    DeviceFloat2D h;	///< array that holds the water height for each element
+    DeviceFloat2D hu; ///< array that holds the x-component of the momentum for each element (water height h multiplied by velocity in x-direction)
+    DeviceFloat2D hv; ///< array that holds the y-component of the momentum for each element (water height h multiplied by velocity in y-direction)
+    DeviceFloat2D b;  ///< array that holds the bathymetry data (sea floor elevation) for each element
     
     /// type of boundary conditions at LEFT, RIGHT, TOP, and BOTTOM boundary
     BoundaryType boundary[4];
@@ -264,14 +265,18 @@ class SWE_Block {
  * grids. 
  */ 
 struct SWE_Block1D {
-    SWE_Block1D(const Float1D& _h, const Float1D& _hu, const Float1D& _hv)
-    : h(_h), hu(_hu), hv(_hv) {};
-    SWE_Block1D(float* _h, float* _hu, float* _hv, int _size, int _stride=1)
-    : h(_h,_size,_stride), hu(_hu,_size,_stride), hv(_hv,_size,_stride) {};
-   
-    Float1D h;
-    Float1D hu;
-    Float1D hv;
+private:
+  BackedFloat1D backh;
+  BackedFloat1D backhu;
+  BackedFloat1D backhv;
+public:
+    SWE_Block1D(const BackedFloat1D& _h, const BackedFloat1D& _hu, const BackedFloat1D& _hv)
+    : backh(_h), backhu(_hu), backhv(_hv) {};
+
+
+    auto h() const { return backh.getReadonly(); }
+    auto hu() const { return backhu.getReadonly(); }
+    auto hv() const { return backhv.getReadonly(); }
 };
 
 

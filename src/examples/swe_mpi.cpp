@@ -384,9 +384,9 @@ int main( int argc, char** argv ) {
           0);
   //
   // Write zero time step
-  l_writer->writeTimeStep( l_waveBlock->getWaterHeight(),
-                          l_waveBlock->getDischarge_hu(),
-                          l_waveBlock->getDischarge_hv(),
+  l_writer->writeTimeStep( l_waveBlock->getWaterHeight().getReadonlyCPUView(),
+                          l_waveBlock->getDischarge_hu().getReadonlyCPUView(),
+                          l_waveBlock->getDischarge_hv().getReadonlyCPUView(),
                           (float) 0.);
   /**
    * Simulation.
@@ -466,9 +466,9 @@ int main( int argc, char** argv ) {
     progressBar.update(l_t);
 
     // write output
-    l_writer->writeTimeStep( l_waveBlock->getWaterHeight(),
-                            l_waveBlock->getDischarge_hu(),
-                            l_waveBlock->getDischarge_hv(),
+    l_writer->writeTimeStep( l_waveBlock->getWaterHeight().getReadonlyCPUView(),
+                            l_waveBlock->getDischarge_hu().getReadonlyCPUView(),
+                            l_waveBlock->getDischarge_hv().getReadonlyCPUView(),
                             l_t);
   }
 
@@ -528,29 +528,29 @@ void exchangeLeftRightGhostLayers( const int i_leftNeighborRank,  SWE_Block1D* o
   MPI_Status l_status;
 
   // send to left, receive from the right:
-  MPI_Sendrecv( i_leftOutflow->h.elemVector(), 1, i_mpiCol, i_leftNeighborRank,  1,
-                o_rightInflow->h.elemVector(), 1, i_mpiCol, i_rightNeighborRank, 1,
+  MPI_Sendrecv( i_leftOutflow->h().elemVector(), 1, i_mpiCol, i_leftNeighborRank,  1,
+                o_rightInflow->h().elemVector(), 1, i_mpiCol, i_rightNeighborRank, 1,
                 MPI_COMM_WORLD, &l_status );
 
-  MPI_Sendrecv( i_leftOutflow->hu.elemVector(), 1, i_mpiCol, i_leftNeighborRank,  2,
-                o_rightInflow->hu.elemVector(), 1, i_mpiCol, i_rightNeighborRank, 2,
+  MPI_Sendrecv( i_leftOutflow->hu().elemVector(), 1, i_mpiCol, i_leftNeighborRank,  2,
+                o_rightInflow->hu().elemVector(), 1, i_mpiCol, i_rightNeighborRank, 2,
                 MPI_COMM_WORLD, &l_status );
 
-  MPI_Sendrecv( i_leftOutflow->hv.elemVector(), 1, i_mpiCol, i_leftNeighborRank,  3,
-                o_rightInflow->hv.elemVector(), 1, i_mpiCol, i_rightNeighborRank, 3,
+  MPI_Sendrecv( i_leftOutflow->hv().elemVector(), 1, i_mpiCol, i_leftNeighborRank,  3,
+                o_rightInflow->hv().elemVector(), 1, i_mpiCol, i_rightNeighborRank, 3,
                 MPI_COMM_WORLD, &l_status );
 
   // send to right, receive from the left:
-  MPI_Sendrecv( i_rightOutflow->h.elemVector(), 1, i_mpiCol, i_rightNeighborRank, 4,
-                o_leftInflow->h.elemVector(),   1, i_mpiCol, i_leftNeighborRank,  4,
+  MPI_Sendrecv( i_rightOutflow->h().elemVector(), 1, i_mpiCol, i_rightNeighborRank, 4,
+                o_leftInflow->h().elemVector(),   1, i_mpiCol, i_leftNeighborRank,  4,
                 MPI_COMM_WORLD, &l_status );
 
-  MPI_Sendrecv( i_rightOutflow->hu.elemVector(), 1, i_mpiCol, i_rightNeighborRank, 5,
-                o_leftInflow->hu.elemVector(),   1, i_mpiCol, i_leftNeighborRank,  5,
+  MPI_Sendrecv( i_rightOutflow->hu().elemVector(), 1, i_mpiCol, i_rightNeighborRank, 5,
+                o_leftInflow->hu().elemVector(),   1, i_mpiCol, i_leftNeighborRank,  5,
                 MPI_COMM_WORLD, &l_status);
 
-  MPI_Sendrecv( i_rightOutflow->hv.elemVector(), 1, i_mpiCol, i_rightNeighborRank, 6,
-                o_leftInflow->hv.elemVector(),   1, i_mpiCol, i_leftNeighborRank,  6,
+  MPI_Sendrecv( i_rightOutflow->hv().elemVector(), 1, i_mpiCol, i_rightNeighborRank, 6,
+                o_leftInflow->hv().elemVector(),   1, i_mpiCol, i_leftNeighborRank,  6,
                 MPI_COMM_WORLD, &l_status );
 
 }
@@ -572,29 +572,29 @@ void exchangeBottomTopGhostLayers( const int i_bottomNeighborRank, SWE_Block1D* 
   MPI_Status l_status;
 
   // send to bottom, receive from the top:
-  MPI_Sendrecv( i_bottomNeighborOutflow->h.elemVector(), 1, i_mpiRow, i_bottomNeighborRank, 11,
-                o_topNeighborInflow->h.elemVector(),     1, i_mpiRow, i_topNeighborRank,11,
+  MPI_Sendrecv( i_bottomNeighborOutflow->h().elemVector(), 1, i_mpiRow, i_bottomNeighborRank, 11,
+                o_topNeighborInflow->h().elemVector(),     1, i_mpiRow, i_topNeighborRank,11,
                 MPI_COMM_WORLD, &l_status );
 
-  MPI_Sendrecv( i_bottomNeighborOutflow->hu.elemVector(), 1, i_mpiRow, i_bottomNeighborRank, 12,
-                o_topNeighborInflow->hu.elemVector(),     1, i_mpiRow, i_topNeighborRank,    12,
+  MPI_Sendrecv( i_bottomNeighborOutflow->hu().elemVector(), 1, i_mpiRow, i_bottomNeighborRank, 12,
+                o_topNeighborInflow->hu().elemVector(),     1, i_mpiRow, i_topNeighborRank,    12,
                 MPI_COMM_WORLD, &l_status );
 
-  MPI_Sendrecv( i_bottomNeighborOutflow->hv.elemVector(), 1, i_mpiRow, i_bottomNeighborRank, 13,
-                o_topNeighborInflow->hv.elemVector(),     1, i_mpiRow, i_topNeighborRank, 13,
+  MPI_Sendrecv( i_bottomNeighborOutflow->hv().elemVector(), 1, i_mpiRow, i_bottomNeighborRank, 13,
+                o_topNeighborInflow->hv().elemVector(),     1, i_mpiRow, i_topNeighborRank, 13,
                 MPI_COMM_WORLD, &l_status);
 
   // send to top, receive from the bottom:
-  MPI_Sendrecv( i_topNeighborOutflow->h.elemVector(),   1, i_mpiRow, i_topNeighborRank,    14,
-                o_bottomNeighborInflow->h.elemVector(), 1, i_mpiRow, i_bottomNeighborRank, 14,
+  MPI_Sendrecv( i_topNeighborOutflow->h().elemVector(),   1, i_mpiRow, i_topNeighborRank,    14,
+                o_bottomNeighborInflow->h().elemVector(), 1, i_mpiRow, i_bottomNeighborRank, 14,
                 MPI_COMM_WORLD, &l_status );
 
-  MPI_Sendrecv( i_topNeighborOutflow->hu.elemVector(),   1, i_mpiRow, i_topNeighborRank, 15,
-                o_bottomNeighborInflow->hu.elemVector(), 1, i_mpiRow, i_bottomNeighborRank, 15,
+  MPI_Sendrecv( i_topNeighborOutflow->hu().elemVector(),   1, i_mpiRow, i_topNeighborRank, 15,
+                o_bottomNeighborInflow->hu().elemVector(), 1, i_mpiRow, i_bottomNeighborRank, 15,
                 MPI_COMM_WORLD, &l_status );
 
-  MPI_Sendrecv( i_topNeighborOutflow->hv.elemVector(),   1, i_mpiRow, i_topNeighborRank,    16,
-                o_bottomNeighborInflow->hv.elemVector(), 1, i_mpiRow, i_bottomNeighborRank, 16,
+  MPI_Sendrecv( i_topNeighborOutflow->hv().elemVector(),   1, i_mpiRow, i_topNeighborRank,    16,
+                o_bottomNeighborInflow->hv().elemVector(), 1, i_mpiRow, i_bottomNeighborRank, 16,
                 MPI_COMM_WORLD, &l_status );
 
 }

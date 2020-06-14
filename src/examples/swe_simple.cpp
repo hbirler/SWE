@@ -186,9 +186,9 @@ int main( int argc, char** argv ) {
           0);
           
   // Write zero time step
-  l_writer->writeTimeStep( l_waveBlock->getWaterHeight(),
-                          l_waveBlock->getDischarge_hu(),
-                          l_waveBlock->getDischarge_hv(),
+  l_writer->writeTimeStep( l_waveBlock->getWaterHeight().getReadonlyCPUView(),
+                          l_waveBlock->getDischarge_hu().getReadonlyCPUView(),
+                          l_waveBlock->getDischarge_hv().getReadonlyCPUView(),
                           (float) 0.);
 
 
@@ -250,9 +250,9 @@ int main( int argc, char** argv ) {
     progressBar.update(l_t);
 
     // write output
-    l_writer->writeTimeStep(l_waveBlock->getWaterHeight(),
-                            l_waveBlock->getDischarge_hu(),
-                            l_waveBlock->getDischarge_hv(),
+    l_writer->writeTimeStep(l_waveBlock->getWaterHeight().getReadonlyCPUView(),
+                            l_waveBlock->getDischarge_hu().getReadonlyCPUView(),
+                            l_waveBlock->getDischarge_hv().getReadonlyCPUView(),
                             l_t);
   }
 

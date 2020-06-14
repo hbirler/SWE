@@ -124,20 +124,25 @@ void SWE_Block::initScenario( float _offsetX, float _offsetY,
 	offsetX = _offsetX;
 	offsetY = _offsetY;
 
+  auto h = this->h.getMutableCPUView();
+  auto hu = this->hu.getMutableCPUView();
+  auto hv = this->hv.getMutableCPUView();
+  auto b = this->b.getMutableCPUView();
+
   // initialize water height and discharge
   for(int i=1; i<=nx; i++)
     for(int j=1; j<=ny; j++) {
       float x = offsetX + (i-0.5f)*dx;
       float y = offsetY + (j-0.5f)*dy;
-      h[i][j] =  i_scenario.getWaterHeight(x,y);
-      hu[i][j] = i_scenario.getVeloc_u(x,y) * h[i][j];
-      hv[i][j] = i_scenario.getVeloc_v(x,y) * h[i][j]; 
+      h(i, j) =  i_scenario.getWaterHeight(x,y);
+      hu(i, j) = i_scenario.getVeloc_u(x,y) * h(i, j);
+      hv(i, j) = i_scenario.getVeloc_v(x,y) * h(i, j);
     };
 
   // initialize bathymetry
   for(int i=0; i<=nx+1; i++) {
     for(int j=0; j<=ny+1; j++) {
-      b[i][j] = i_scenario.getBathymetry( offsetX + (i-0.5f)*dx,
+      b(i, j) = i_scenario.getBathymetry( offsetX + (i-0.5f)*dx,
                                           offsetY + (j-0.5f)*dy );
     }
   }
@@ -161,10 +166,10 @@ void SWE_Block::initScenario( float _offsetX, float _offsetY,
  * to values specified by parameter function _h
  */
 void SWE_Block::setWaterHeight(float (*_h)(float, float)) {
-
+  auto h = this->h.getMutableCPUView();
   for(int i=1; i<=nx; i++)
     for(int j=1; j<=ny; j++) {
-      h[i][j] =  _h(offsetX + (i-0.5f)*dx, offsetY + (j-0.5f)*dy);
+      h(i, j) =  _h(offsetX + (i-0.5f)*dx, offsetY + (j-0.5f)*dy);
     };
 
   synchWaterHeightAfterWrite();
@@ -176,13 +181,16 @@ void SWE_Block::setWaterHeight(float (*_h)(float, float)) {
  * Note: unknowns hu and hv represent momentum, while parameters u and v are velocities! 
  */
 void SWE_Block::setDischarge(float (*_u)(float, float), float (*_v)(float, float)) {
+  auto h = this->h.getMutableCPUView();
+  auto hu = this->hu.getMutableCPUView();
+  auto hv = this->hv.getMutableCPUView();
 
   for(int i=1; i<=nx; i++)
     for(int j=1; j<=ny; j++) {
       float x = offsetX + (i-0.5f)*dx;
       float y = offsetY + (j-0.5f)*dy;
-      hu[i][j] = _u(x,y) * h[i][j];
-      hv[i][j] = _v(x,y) * h[i][j]; 
+      hu(i, j) = _u(x,y) * h(i, j);
+      hv(i, j) = _v(x,y) * h(i, j);
     };
 
   synchDischargeAfterWrite();
@@ -194,10 +202,10 @@ void SWE_Block::setDischarge(float (*_u)(float, float), float (*_v)(float, float
  * bathymetry source terms are re-computed
  */
 void SWE_Block::setBathymetry(float _b) {
-
+  auto b = this->b.getMutableCPUView();
   for(int i=0; i<=nx+1; i++)
     for(int j=0; j<=ny+1; j++)
-      b[i][j] = _b;
+      b(i, j) = _b;
 
   synchBathymetryAfterWrite();
 }
@@ -208,10 +216,10 @@ void SWE_Block::setBathymetry(float _b) {
  * bathymetry source terms are re-computed
  */
 void SWE_Block::setBathymetry(float (*_b)(float, float)) {
-
+  auto b = this->b.getMutableCPUView();
   for(int i=0; i<=nx+1; i++)
     for(int j=0; j<=ny+1; j++)
-      b[i][j] = _b(offsetX + (i-0.5f)*dx, offsetY + (j-0.5f)*dy);
+      b(i, j) = _b(offsetX + (i-0.5f)*dx, offsetY + (j-0.5f)*dy);
 
   synchBathymetryAfterWrite();
 }
@@ -249,23 +257,23 @@ void SWE_Block::setBathymetry(float (*_b)(float, float)) {
 /**
  * return reference to water height unknown h
  */
-const Float2D& SWE_Block::getWaterHeight() { 
+const DeviceFloat2D& SWE_Block::getWaterHeight() {
   synchWaterHeightBeforeRead();
-  return h; 
+  return h;
 }
 
 /**
  * return reference to discharge unknown hu
  */
-const Float2D& SWE_Block::getDischarge_hu() { 
+const DeviceFloat2D& SWE_Block::getDischarge_hu() {
   synchDischargeBeforeRead();
-  return hu; 
+  return hu;
 }
 
 /**
  * return reference to discharge unknown hv
  */
-const Float2D& SWE_Block::getDischarge_hv() { 
+const DeviceFloat2D& SWE_Block::getDischarge_hv() {
   synchDischargeBeforeRead();
   return hv;
 }
@@ -273,9 +281,9 @@ const Float2D& SWE_Block::getDischarge_hv() {
 /**
  * return reference to bathymetry unknown b
  */
-const Float2D& SWE_Block::getBathymetry() { 
+const DeviceFloat2D& SWE_Block::getBathymetry() {
   synchBathymetryBeforeRead();
-  return b; 
+  return b;
 }
 
 //==================================================================
@@ -353,30 +361,31 @@ void SWE_Block::setBoundaryType( const BoundaryEdge i_edge,
  */
 void SWE_Block::setBoundaryBathymetry()
 {
+  auto b = this->b.getMutableCPUView();
 	// set bathymetry values in the ghost layer, if necessary
 	if( boundary[BND_LEFT] == OUTFLOW || boundary[BND_LEFT] == WALL ) {
-		memcpy(b[0], b[1], sizeof(float)*(ny+2));
+		memcpy(b(0), b(1), sizeof(float)*(ny+2));
 	}
 	if( boundary[BND_RIGHT] == OUTFLOW || boundary[BND_RIGHT] == WALL ) {
-		memcpy(b[nx+1], b[nx], sizeof(float)*(ny+2));
+		memcpy(b(nx+1), b(nx), sizeof(float)*(ny+2));
 	}
 	if( boundary[BND_BOTTOM] == OUTFLOW || boundary[BND_BOTTOM] == WALL ) {
 		for(int i=0; i<=nx+1; i++) {
-			b[i][0] = b[i][1];
+			b(i,0) = b(i,1);
 		}
 	}
 	if( boundary[BND_TOP] == OUTFLOW || boundary[BND_TOP] == WALL ) {
 		for(int i=0; i<=nx+1; i++) {
-			b[i][ny+1] = b[i][ny];
+			b(i,ny+1) = b(i,ny);
 		}
 	}
 
 
 	// set corner values
-        b[0][0]       = b[1][1];
-        b[0][ny+1]    = b[1][ny];
-        b[nx+1][0]    = b[nx][1];
-        b[nx+1][ny+1] = b[nx][ny];
+        b(0,0)       = b(1,1);
+        b(0,ny+1)    = b(1,ny);
+        b(nx+1,0)    = b(nx,1);
+        b(nx+1,ny+1) = b(nx,ny);
 
 	// synchronize after an external update of the bathymetry
 	synchBathymetryAfterWrite();
@@ -388,7 +397,6 @@ void SWE_Block::setBoundaryBathymetry()
  * @return	a SWE_Block1D object that contains row variables h, hu, and hv
  */
 SWE_Block1D* SWE_Block::registerCopyLayer(BoundaryEdge edge){
-
   switch (edge) {
     case BND_LEFT:
       return new SWE_Block1D( h.getColProxy(1), hu.getColProxy(1), hv.getColProxy(1) );
@@ -413,7 +421,6 @@ SWE_Block1D* SWE_Block::registerCopyLayer(BoundaryEdge edge){
  * @return	a SWE_Block1D object that contains row variables h, hu, and hv
  */
 SWE_Block1D* SWE_Block::grabGhostLayer(BoundaryEdge edge){
-
   boundary[edge] = PASSIVE;
   switch (edge) {
     case BND_LEFT:
@@ -436,7 +443,9 @@ SWE_Block1D* SWE_Block::grabGhostLayer(BoundaryEdge edge){
  * the values are copied
  */
 void SWE_Block::setGhostLayer() {
-
+  auto h = this->h.getMutableCPUView();
+  auto hu = this->hu.getMutableCPUView();
+  auto hv = this->hv.getMutableCPUView();
 #ifdef DBG
   cout << "Set simple boundary conditions " << endl << flush;
 #endif
@@ -454,36 +463,36 @@ void SWE_Block::setGhostLayer() {
   // left boundary
   if (boundary[BND_LEFT] == CONNECT) {
      for(int j=0; j<=ny+1; j++) {
-       h[0][j] = neighbour[BND_LEFT]->h[j];
-       hu[0][j] = neighbour[BND_LEFT]->hu[j];
-       hv[0][j] = neighbour[BND_LEFT]->hv[j];
+        h(0,j) =  neighbour[BND_LEFT]->h()[j];
+       hu(0,j) = neighbour[BND_LEFT]->hu()[j];
+       hv(0,j) = neighbour[BND_LEFT]->hv()[j];
       };
   };
   
   // right boundary
   if(boundary[BND_RIGHT] == CONNECT) {
      for(int j=0; j<=ny+1; j++) {
-       h[nx+1][j] = neighbour[BND_RIGHT]->h[j];
-       hu[nx+1][j] = neighbour[BND_RIGHT]->hu[j];
-       hv[nx+1][j] = neighbour[BND_RIGHT]->hv[j];
+        h(nx+1,j) =  neighbour[BND_RIGHT]->h()[j];
+       hu(nx+1,j) = neighbour[BND_RIGHT]->hu()[j];
+       hv(nx+1,j) = neighbour[BND_RIGHT]->hv()[j];
       };
   };
 
   // bottom boundary
   if(boundary[BND_BOTTOM] == CONNECT) {
      for(int i=0; i<=nx+1; i++) {
-       h[i][0] = neighbour[BND_BOTTOM]->h[i];
-       hu[i][0] = neighbour[BND_BOTTOM]->hu[i];
-       hv[i][0] = neighbour[BND_BOTTOM]->hv[i];
+        h(i,0) =  neighbour[BND_BOTTOM]->h()[i];
+       hu(i,0) = neighbour[BND_BOTTOM]->hu()[i];
+       hv(i,0) = neighbour[BND_BOTTOM]->hv()[i];
       };
   };
 
   // top boundary
   if(boundary[BND_TOP] == CONNECT) {
      for(int i=0; i<=nx+1; i++) {
-       h[i][ny+1] = neighbour[BND_TOP]->h[i];
-       hu[i][ny+1] = neighbour[BND_TOP]->hu[i];
-       hv[i][ny+1] = neighbour[BND_TOP]->hv[i];
+        h(i,ny+1) =  neighbour[BND_TOP]->h()[i];
+       hu(i,ny+1) = neighbour[BND_TOP]->hu()[i];
+       hv(i,ny+1) = neighbour[BND_TOP]->hv()[i];
      }
   };
 
@@ -506,21 +515,23 @@ void SWE_Block::setGhostLayer() {
  */
 void SWE_Block::computeMaxTimestep( const float i_dryTol,
                                     const float i_cflNumber ) {
-  
+  auto h = this->h.getReadonlyCPUView();
+  auto hu = this->hu.getReadonlyCPUView();
+  auto hv = this->hv.getReadonlyCPUView();
   // initialize the maximum wave speed
   float l_maximumWaveSpeed = (float) 0;
 
   // compute the maximum wave speed within the grid
   for(int i=1; i <= nx; i++) {
     for(int j=1; j <= ny; j++) {
-      if( h[i][j] > i_dryTol ) {
-        float l_momentum = std::max( std::abs( hu[i][j] ),
-                                     std::abs( hv[i][j] ) );
+      if( h(i,j) > i_dryTol ) {
+        float l_momentum = std::max( std::abs( hu(i,j) ),
+                                     std::abs( hv(i,j) ) );
 
-        float l_particleVelocity = l_momentum / h[i][j];
+        float l_particleVelocity = l_momentum / h(i,j);
         
         // approximate the wave speed
-        float l_waveSpeed = l_particleVelocity + std::sqrt( g * h[i][j] );
+        float l_waveSpeed = l_particleVelocity + std::sqrt( g * h(i,j) );
         
         l_maximumWaveSpeed = std::max( l_maximumWaveSpeed, l_waveSpeed );
       }
@@ -550,6 +561,9 @@ void SWE_Block::computeMaxTimestep( const float i_dryTol,
  */
 void SWE_Block::setBoundaryConditions() {
 
+  auto h = this->h.getMutableCPUView();
+  auto hu = this->hu.getMutableCPUView();
+  auto hv = this->hv.getMutableCPUView();
   // CONNECT boundary conditions are set in the calling function setGhostLayer
   // PASSIVE boundary conditions need to be set by the component using SWE_Block
 
@@ -558,18 +572,18 @@ void SWE_Block::setBoundaryConditions() {
     case WALL:
     {
       for(int j=1; j<=ny; j++) {
-        h[0][j] = h[1][j];
-        hu[0][j] = -hu[1][j];
-        hv[0][j] = hv[1][j];
+         h(0,j) =   h(1,j);
+        hu(0,j) = -hu(1,j);
+        hv(0,j) =  hv(1,j);
       };
       break;
     }
     case OUTFLOW:
     {
       for(int j=1; j<=ny; j++) {
-        h[0][j] = h[1][j];
-        hu[0][j] = hu[1][j];
-        hv[0][j] = hv[1][j];
+         h(0,j) =  h(1,j);
+        hu(0,j) = hu(1,j);
+        hv(0,j) = hv(1,j);
       };
       break;
     }
@@ -586,18 +600,18 @@ void SWE_Block::setBoundaryConditions() {
     case WALL:
     {
       for(int j=1; j<=ny; j++) {
-        h[nx+1][j] = h[nx][j];
-        hu[nx+1][j] = -hu[nx][j];
-        hv[nx+1][j] = hv[nx][j];
+         h(nx+1,j) =   h(nx,j);
+        hu(nx+1,j) = -hu(nx,j);
+        hv(nx+1,j) =  hv(nx,j);
       };
       break;
     }
     case OUTFLOW:
     {
       for(int j=1; j<=ny; j++) {
-        h[nx+1][j] = h[nx][j];
-        hu[nx+1][j] = hu[nx][j];
-        hv[nx+1][j] = hv[nx][j];
+         h(nx+1,j) =  h(nx,j);
+        hu(nx+1,j) = hu(nx,j);
+        hv(nx+1,j) = hv(nx,j);
       };
       break;
     }
@@ -614,18 +628,18 @@ void SWE_Block::setBoundaryConditions() {
     case WALL:
     {
       for(int i=1; i<=nx; i++) {
-        h[i][0] = h[i][1];
-        hu[i][0] = hu[i][1];
-        hv[i][0] = -hv[i][1];
+         h(i,0) =   h(i,1);
+        hu(i,0) =  hu(i,1);
+        hv(i,0) = -hv(i,1);
       };
       break;
     }
     case OUTFLOW:
     {
       for(int i=1; i<=nx; i++) {
-        h[i][0] = h[i][1];
-        hu[i][0] = hu[i][1];
-        hv[i][0] = hv[i][1];
+         h(i,0) =  h(i,1);
+        hu(i,0) = hu(i,1);
+        hv(i,0) = hv(i,1);
       };
       break;
     }
@@ -642,18 +656,18 @@ void SWE_Block::setBoundaryConditions() {
     case WALL:
     {
       for(int i=1; i<=nx; i++) {
-        h[i][ny+1] = h[i][ny];
-        hu[i][ny+1] = hu[i][ny];
-        hv[i][ny+1] = -hv[i][ny];
+         h(i,ny+1) =   h(i,ny);
+        hu(i,ny+1) =  hu(i,ny);
+        hv(i,ny+1) = -hv(i,ny);
       };
       break;
     }
     case OUTFLOW:
     {
       for(int i=1; i<=nx; i++) {
-        h[i][ny+1] = h[i][ny];
-        hu[i][ny+1] = hu[i][ny];
-        hv[i][ny+1] = hv[i][ny];
+         h(i,ny+1) =  h(i,ny);
+        hu(i,ny+1) = hu(i,ny);
+        hv(i,ny+1) = hv(i,ny);
       };
       break;
     }
@@ -691,21 +705,21 @@ void SWE_Block::setBoundaryConditions() {
    *                  **************************
    * </pre>
    */
-  h [0][0] = h [1][1];
-  hu[0][0] = hu[1][1];
-  hv[0][0] = hv[1][1];
+  h (0,0) = h (1,1);
+  hu(0,0) = hu(1,1);
+  hv(0,0) = hv(1,1);
 
-  h [0][ny+1] = h [1][ny];
-  hu[0][ny+1] = hu[1][ny];
-  hv[0][ny+1] = hv[1][ny];
+  h (0,ny+1) = h (1,ny);
+  hu(0,ny+1) = hu(1,ny);
+  hv(0,ny+1) = hv(1,ny);
   
-  h [nx+1][0] = h [nx][1];
-  hu[nx+1][0] = hu[nx][1];
-  hv[nx+1][0] = hv[nx][1];
+  h (nx+1,0) = h (nx,1);
+  hu(nx+1,0) = hu(nx,1);
+  hv(nx+1,0) = hv(nx,1);
 
-  h [nx+1][ny+1] = h [nx][ny];
-  hu[nx+1][ny+1] = hu[nx][ny];
-  hv[nx+1][ny+1] = hv[nx][ny];
+  h (nx+1,ny+1) = h (nx,ny);
+  hu(nx+1,ny+1) = hu(nx,ny);
+  hv(nx+1,ny+1) = hv(nx,ny);
 }
 
 

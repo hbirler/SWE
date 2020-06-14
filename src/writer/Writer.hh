@@ -26,6 +26,7 @@
 #ifndef WRITER_HH_
 #define WRITER_HH_
 
+#include "tools/DeviceFloat2D.hh"
 #include "tools/help.hh"
 #include <memory>
 
@@ -66,7 +67,7 @@ protected:
 	const std::string fileName;
 
     //! (Reference) to bathymetry data
-    const Float2D &b;
+    const DeviceFloat2D& b;
 
 	//! Boundary layer size
 	const BoundarySize boundarySize;
@@ -79,7 +80,7 @@ protected:
 
 public:
 
-    static std::shared_ptr<Writer> createWriterInstance(std::string &fileName, const Float2D &bathymetry, 
+    static std::shared_ptr<Writer> createWriterInstance(std::string &fileName, const DeviceFloat2D &bathymetry,
                                                      const BoundarySize &boundarySize, int nX, int nY,
                                                      float dX, float dY, float offsetX, float offsetY,
                                                      float originX, float originY, int flush);
@@ -89,7 +90,7 @@ public:
 	 * @param i_boundarySize size of the boundaries.
 	 */
 	Writer(const std::string &i_fileName,
-		const Float2D &i_b,
+		const DeviceFloat2D &i_b,
 		const BoundarySize &i_boundarySize,
 		int i_nX, int i_nY)
 		: fileName(i_fileName),
@@ -111,9 +112,9 @@ public:
 	 * @param i_time simulation time of the time step.
 	 */
 	virtual void writeTimeStep(
-			const Float2D &i_h,
-            const Float2D &i_hu,
-            const Float2D &i_hv,
+			      const ViewF2D& i_h,
+            const ViewF2D& i_hu,
+            const ViewF2D& i_hv,
             float i_time) = 0;
 };
 

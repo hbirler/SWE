@@ -6,7 +6,7 @@
 #endif
 #include <memory>
 
-std::shared_ptr<io::Writer> io::Writer::createWriterInstance(std::string &fileName, const Float2D &bathymetry,
+std::shared_ptr<io::Writer> io::Writer::createWriterInstance(std::string &fileName, const DeviceFloat2D &bathymetry,
                                           const BoundarySize &boundarySize, int nX, int nY,
                                           float dX, float dY, float offsetX, float offsetY,
                                           float originX, float originY, int flush) {

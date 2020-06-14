@@ -3,10 +3,6 @@
 #include "cross/policies.hh"
 #include "solvers/AugRieRaja.hpp"
 
-RAJA::View<float, RAJA::Layout<2>> asView(const Float2D& data) {
-  return {data.data(), data.getCols(), data.getRows()};
-}
-
 /**
  * Compute net updates for the block.
  * The member variable #maxTimestep will be updated with the
@@ -18,13 +14,13 @@ void SWE_WaveAccumulationBlock::computeNumericalFluxes() {
 
   RAJA::ReduceMax<policies::reduce, float> maxWaveSpeed(0.0f);
 
-  auto hNetUpdates = asView(this->hNetUpdates);
-  auto huNetUpdates = asView(this->huNetUpdates);
-  auto hvNetUpdates = asView(this->hvNetUpdates);
-  auto h = asView(this->h);
-  auto hu = asView(this->hu);
-  auto hv = asView(this->hv);
-  auto b = asView(this->b);
+  auto hNetUpdates = this->hNetUpdates.getDeviceView();
+  auto huNetUpdates = this->huNetUpdates.getDeviceView();
+  auto hvNetUpdates = this->hvNetUpdates.getDeviceView();
+  auto h = this->h.getDeviceView();
+  auto hu = this->hu.getDeviceView();
+  auto hv = this->hv.getDeviceView();
+  auto b = this->b.getDeviceView();
 
   RAJA::region<policies::region>([=]() {
     RAJA::ReduceMax<policies::reduce, float> l_maxWaveSpeed(0.0f);
@@ -94,12 +90,12 @@ void SWE_WaveAccumulationBlock::computeNumericalFluxes() {
  * @param dt time step width used in the update.
  */
 void SWE_WaveAccumulationBlock::updateUnknowns(float dt) {
-  auto hNetUpdates = asView(this->hNetUpdates);
-  auto huNetUpdates = asView(this->huNetUpdates);
-  auto hvNetUpdates = asView(this->hvNetUpdates);
-  auto h = asView(this->h);
-  auto hu = asView(this->hu);
-  auto hv = asView(this->hv);
+  auto hNetUpdates = this->hNetUpdates.getDeviceView();
+  auto huNetUpdates = this->huNetUpdates.getDeviceView();
+  auto hvNetUpdates = this->hvNetUpdates.getDeviceView();
+  auto h = this->h.getDeviceView();
+  auto hu = this->hu.getDeviceView();
+  auto hv = this->hv.getDeviceView();
 
   RAJA::kernel<policies::loop_2d<>>(
       RAJA::make_tuple(RAJA::RangeSegment(1, nx + 1), RAJA::RangeSegment(1, ny + 1)), [=] RAJA_HOST_DEVICE (size_t i, size_t j) {

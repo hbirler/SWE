@@ -86,7 +86,7 @@ class Float1D
  * Besides constructor/deconstructor, the class provides overloading of 
  * the []-operator, such that elements can be accessed as a[i][j]. 
  */ 
-class Float2D {
+class Float2DOld {
 public:
   /**
      * Constructor:
@@ -94,7 +94,7 @@ public:
      * @param _cols	number of columns (i.e., elements in horizontal direction)
      * @param _rows rumber of rows (i.e., elements in vertical directions)
    */
-  Float2D(int _cols, int _rows, bool _allocateMemory = true)
+  Float2DOld(int _cols, int _rows, bool _allocateMemory = true)
       : rows(_rows), cols(_cols) {
     if (_allocateMemory) {
       elemStorage = make_managed_uptr<float>(rows * cols);
@@ -109,7 +109,7 @@ public:
      * @param _rows rumber of rows (i.e., elements in vertical directions)
      * @param _elem pointer to a suitably allocated region of memory to be used for thew array elements
    */
-  Float2D(int _cols, int _rows, float *_elem)
+  Float2DOld(int _cols, int _rows, float *_elem)
       : rows(_rows), cols(_cols) {
     elem = _elem;
   }
@@ -121,7 +121,7 @@ public:
      * @param _rows rumber of rows (i.e., elements in vertical directions)
      * @param _elem pointer to a suitably allocated region of memory to be used for thew array elements
    */
-  Float2D(const Float2D &_elem, bool shallowCopy = true)
+  Float2DOld(const Float2DOld &_elem, bool shallowCopy = true)
       : rows(_elem.rows), cols(_elem.cols) {
     if (shallowCopy) {
       elem = _elem.elem;

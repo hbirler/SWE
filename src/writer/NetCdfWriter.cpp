@@ -47,7 +47,7 @@
  * @param i_dynamicBathymetry
  */
 io::NetCdfWriter::NetCdfWriter( const std::string &i_baseName,
-		const Float2D &i_b,
+		const DeviceFloat2D &i_b,
 		const BoundarySize &i_boundarySize,
 		int i_nX, int i_nY,
 		float i_dX, float i_dY,
@@ -143,7 +143,7 @@ io::NetCdfWriter::~NetCdfWriter() {
  * @param i_boundarySize size of the boundaries.
  * @param i_ncVariable time dependent netCDF-variable to which the output is written to.
  */
-void io::NetCdfWriter::writeVarTimeDependent( const Float2D &i_matrix,
+void io::NetCdfWriter::writeVarTimeDependent( const ViewF2D &i_matrix,
                                               int i_ncVariable ) {
 	//write col wise, necessary to get rid of the boundary
 	//storage in Float2D is col wise
@@ -153,7 +153,7 @@ void io::NetCdfWriter::writeVarTimeDependent( const Float2D &i_matrix,
 	for(unsigned int col = 0; col < nX; col++) {
 		start[2] = col; //select col (dim "x")
 		nc_put_vara_float(dataFile, i_ncVariable, start, count,
-				&i_matrix[col+boundarySize[0]][boundarySize[2]]); //write col
+				&i_matrix(col+boundarySize[0], boundarySize[2])); //write col
   }
 }
 
@@ -169,7 +169,7 @@ void io::NetCdfWriter::writeVarTimeDependent( const Float2D &i_matrix,
  * @param i_boundarySize size of the boundaries.
  * @param i_ncVariable time independent netCDF-variable to which the output is written to.
  */
-void io::NetCdfWriter::writeVarTimeIndependent( const Float2D &i_matrix,
+void io::NetCdfWriter::writeVarTimeIndependent( const ViewF2D &i_matrix,
                                                 int i_ncVariable ) {
 	//write col wise, necessary to get rid of the boundary
 	//storage in Float2D is col wise
@@ -179,7 +179,7 @@ void io::NetCdfWriter::writeVarTimeIndependent( const Float2D &i_matrix,
 	for(unsigned int col = 0; col < nX; col++) {
 		start[1] = col; //select col (dim "x")
 		nc_put_vara_float(dataFile, i_ncVariable, start, count,
-				&i_matrix[col+boundarySize[0]][boundarySize[2]]); //write col
+				&i_matrix(col+boundarySize[0], boundarySize[2])); //write col
   }
 }
 
@@ -197,13 +197,13 @@ void io::NetCdfWriter::writeVarTimeIndependent( const Float2D &i_matrix,
  * @param i_boundarySize size of the boundaries.
  * @param i_time simulation time of the time step.
  */
-void io::NetCdfWriter::writeTimeStep( const Float2D &i_h,
-                                      const Float2D &i_hu,
-                                      const Float2D &i_hv,
+void io::NetCdfWriter::writeTimeStep( const ViewF2D &i_h,
+                                      const ViewF2D &i_hu,
+                                      const ViewF2D &i_hv,
                                       float i_time) {
 	if (timeStep == 0)
 		// Write bathymetry
-		writeVarTimeIndependent(b, bVar);
+		writeVarTimeIndependent(b.getReadonlyCPUView(), bVar);
 
 	//write i_time
 	nc_put_var1_float(dataFile, timeVar, &timeStep, &i_time);

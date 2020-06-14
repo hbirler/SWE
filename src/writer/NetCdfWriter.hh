@@ -63,17 +63,17 @@ private:
     unsigned int flush;
 
     // writer time dependent variables.
-    void writeVarTimeDependent( const Float2D &i_matrix,
+    void writeVarTimeDependent( const ViewF2D &i_matrix,
                                 int i_ncVariable);
 
     // writes time independent variables.
-    void writeVarTimeIndependent( const Float2D &i_matrix,
+    void writeVarTimeIndependent( const ViewF2D &i_matrix,
                                   int i_ncVariable);
 
 
   public:
     NetCdfWriter(const std::string &i_fileName,
-    			 const Float2D &i_b,
+    			 const DeviceFloat2D &i_b,
                  const BoundarySize &i_boundarySize,
                  int i_nX, int i_nY,
                  float i_dX, float i_dY,
@@ -82,9 +82,9 @@ private:
     virtual ~NetCdfWriter();
 
     // writes the unknowns at a given time step to the netCDF-file.
-    void writeTimeStep( const Float2D &i_h,
-                        const Float2D &i_hu,
-                        const Float2D &i_hv,
+    void writeTimeStep( const ViewF2D &i_h,
+                        const ViewF2D &i_hu,
+                        const ViewF2D &i_hv,
                         float i_time);
 
   private:
