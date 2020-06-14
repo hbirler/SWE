@@ -33,7 +33,7 @@ add_subdirectory(submodules/RAJA)
 if (ENABLE_CUDA)
     enable_language(CUDA)
     # for raja
-    set (CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --expt-extended-lambda")
+    set (CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --expt-extended-lambda -gencode arch=compute_60,code=sm_60")
 endif()
 
 add_executable(swe-single-node)
