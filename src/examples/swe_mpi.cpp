@@ -34,6 +34,7 @@
 #include <mpi.h>
 #include <string>
 #include <vector>
+#include <chrono>
 
 #include "blocks/SWE_Block.hh"
 
