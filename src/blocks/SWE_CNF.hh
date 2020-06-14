@@ -33,8 +33,8 @@ void SWE_WaveAccumulationBlock::computeNumericalFluxes() {
     RAJA::ReduceMax<policies::reduce, float> l_maxWaveSpeed(0.0f);
 
     RAJA::kernel<policies::loop_2d<true>>(
-        RAJA::make_tuple(RAJA::RangeSegment(1, nx + 2), RAJA::RangeSegment(1, ny + 1)), [=] RAJA_HOST_DEVICE (size_t i, size_t j) __attribute__((always_inline)) {
-          constexpr unsigned hNetUpLeft = 0, hNetUpRight = 1, huNetUpLeft = 2, huNetUpRight = 3, maxEdgeSpeed = 4;
+        RAJA::make_tuple(RAJA::RangeSegment(1, nx + 2), RAJA::RangeSegment(1, ny + 1)), [=] RAJA_HOST_DEVICE (size_t i, size_t j) {
+          constexpr size_t hNetUpLeft = 0, hNetUpRight = 1, huNetUpLeft = 2, huNetUpRight = 3, maxEdgeSpeed = 4;
           float l_netUpdates[5];
 
           augRieComputeNetUpdates (h(rows, i - 1, j), h(rows, i, j), hu(rows, i - 1, j), hu(rows, i, j), b(rows, i - 1, j), b(rows, i, j),
@@ -51,8 +51,8 @@ void SWE_WaveAccumulationBlock::computeNumericalFluxes() {
         });
 
     RAJA::kernel<policies::loop_2d<true>>(
-        RAJA::make_tuple(RAJA::RangeSegment(1, nx + 1), RAJA::RangeSegment(1, ny + 2)), [=] RAJA_HOST_DEVICE (size_t i, size_t j) __attribute__((always_inline)) {
-          constexpr unsigned hNetUpDow = 0, hNetUpUpw = 1, hvNetUpDow = 2, hvNetUpUpw = 3, maxEdgeSpeed = 4;
+        RAJA::make_tuple(RAJA::RangeSegment(1, nx + 1), RAJA::RangeSegment(1, ny + 2)), [=] RAJA_HOST_DEVICE (size_t i, size_t j) {
+          constexpr size_t hNetUpDow = 0, hNetUpUpw = 1, hvNetUpDow = 2, hvNetUpUpw = 3, maxEdgeSpeed = 4;
           float l_netUpdates[5];
 
           augRieComputeNetUpdates (h(rows, i, j - 1), h(rows, i, j), hv(rows, i, j - 1), hv(rows, i, j), b(rows, i, j - 1), b(rows, i, j),
@@ -110,7 +110,7 @@ void SWE_WaveAccumulationBlock::updateUnknowns(float dt) {
   auto rows = this->h.getRows();
 
   RAJA::kernel<policies::loop_2d<>>(
-      RAJA::make_tuple(RAJA::RangeSegment(1, nx + 1), RAJA::RangeSegment(1, ny + 1)), [=] RAJA_HOST_DEVICE (size_t i, size_t j) __attribute__((always_inline)) {
+      RAJA::make_tuple(RAJA::RangeSegment(1, nx + 1), RAJA::RangeSegment(1, ny + 1)), [=] RAJA_HOST_DEVICE (size_t i, size_t j) {
         h(rows, i, j)  -= dt * (hNetUpdatesL(rows, i, j) + hNetUpdatesR(rows, i, j));
         hu(rows, i, j) -= dt * (huNetUpdatesL(rows, i, j) + huNetUpdatesR(rows, i, j));
         hv(rows, i, j) -= dt * (hvNetUpdatesL(rows, i, j) + hvNetUpdatesR(rows, i, j));

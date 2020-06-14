@@ -58,11 +58,11 @@ public:
     /// The data
     float* data;
     /// Number of rows
-    int rows;
+    size_t rows;
     /// Constructor
-    ViewBase(int rows, float* data);
+    ViewBase(size_t rows, float* data);
 
-    Float1D getProxy(int offset, int rows, int stride = 1) const {
+    Float1D getProxy(size_t offset, size_t rows, size_t stride = 1) const {
       return Float1D(data + offset, rows, stride);
     };
 
@@ -79,24 +79,24 @@ public:
     /// The data on cpu
     float* data;
   public:
-    RAJA_HOST_DEVICE RAJA_INLINE maybe_const_t<float, !Mutable>* operator()(int rows, int i) const { return data + i * rows; }
-    RAJA_HOST_DEVICE RAJA_INLINE maybe_const_ref_t<float, !Mutable> operator()(int rows, int i, int j) const { return *(data + i * rows + j); }
+    RAJA_HOST_DEVICE RAJA_INLINE maybe_const_t<float, !Mutable>* operator()(size_t rows, size_t i) const { return data + i * rows; }
+    RAJA_HOST_DEVICE RAJA_INLINE maybe_const_ref_t<float, !Mutable> operator()(size_t rows, size_t i, size_t j) const { return *(data + i * rows + j); }
     LightView(float* data) : data(data) {}
   };
 
   template <bool Mutable>
   class View : public ViewBase {
   public:
-    RAJA_HOST_DEVICE RAJA_INLINE maybe_const_t<float, !Mutable>* operator()(int i) const { return data + i * rows; }
-    RAJA_HOST_DEVICE RAJA_INLINE maybe_const_ref_t<float, !Mutable> operator()(int i, int j) const { return *(data + i * rows + j); }
-    View(int rows, float* cpuData) : ViewBase(rows, cpuData) {}
+    RAJA_HOST_DEVICE RAJA_INLINE maybe_const_t<float, !Mutable>* operator()(size_t i) const { return data + i * rows; }
+    RAJA_HOST_DEVICE RAJA_INLINE maybe_const_ref_t<float, !Mutable> operator()(size_t i, size_t j) const { return *(data + i * rows + j); }
+    View(size_t rows, float* cpuData) : ViewBase(rows, cpuData) {}
 
     LightView<Mutable> asLight() const { return {data}; }
   };
 
 
   /// Constructor
-  DeviceFloat2D(int cols, int rows);
+  DeviceFloat2D(size_t cols, size_t rows);
   /// Destructor
   ~DeviceFloat2D();
 
@@ -104,9 +104,9 @@ public:
   DeviceFloat2D(DeviceFloat2D&&) = delete;
 
   /// Return a multi-use proxy that is able to access a certain view.
-  BackedFloat1D getColProxy(int i) const;
+  BackedFloat1D getColProxy(size_t i) const;
   /// Return a multi-use proxy that is able to access a certain view.
-  BackedFloat1D getRowProxy(int j) const;
+  BackedFloat1D getRowProxy(size_t j) const;
 
   /// Get single-use CPU view that is readonly
   View<false> getReadonlyCPUView() const;
@@ -115,8 +115,8 @@ public:
   /// Get single-use device view
   View<true> getDeviceView();
 
-  inline int getRows() const { return rows; };
-  inline int getCols() const { return cols; };
+  inline size_t getRows() const { return rows; };
+  inline size_t getCols() const { return cols; };
 };
 
 

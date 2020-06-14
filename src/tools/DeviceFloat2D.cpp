@@ -1,10 +1,10 @@
 #include "DeviceFloat2D.hh"
 
-DeviceFloat2D::ViewBase::ViewBase(int rows, float *data)
+DeviceFloat2D::ViewBase::ViewBase(size_t rows, float *data)
   :data(data), rows(rows) {
 }
 
-DeviceFloat2D::DeviceFloat2D(int cols, int rows) : cols(cols), rows(rows), data(swe_alloc<float>(cols * rows)) {}
+DeviceFloat2D::DeviceFloat2D(size_t cols, size_t rows) : cols(cols), rows(rows), data(swe_alloc<float>(cols * rows)) {}
 
 DeviceFloat2D::~DeviceFloat2D() {
   swe_cleanup_cpuPtr<float>(data, cpuData);
@@ -53,8 +53,8 @@ DeviceFloat2D::View<true> DeviceFloat2D::getDeviceView() {
     return getProxyUnsafe(j, cols, rows);
   };*/
 
-BackedFloat1D DeviceFloat2D::getColProxy(int i) const { return BackedFloat1D(*this, rows * i, rows); }
-BackedFloat1D DeviceFloat2D::getRowProxy(int j) const { return BackedFloat1D(*this, j, cols, rows); }
+BackedFloat1D DeviceFloat2D::getColProxy(size_t i) const { return BackedFloat1D(*this, rows * i, rows); }
+BackedFloat1D DeviceFloat2D::getRowProxy(size_t j) const { return BackedFloat1D(*this, j, cols, rows); }
 
 const Float1D BackedFloat1D::getReadonly() const {
   return back.getReadonlyCPUView().getProxy(offset, rows, stride);
