@@ -13,11 +13,14 @@ using region = RAJA::seq_region;
 
 #ifdef CUDA
 using reduce = RAJA::cuda_reduce;
+using reduce_seq = RAJA::cuda_reduce;
 #else
 #ifdef LOOP_OPENMP
 using reduce = RAJA::omp_reduce;
+using reduce_seq = RAJA::seq_reduce;
 #else
 using reduce = RAJA::seq_reduce;
+using reduce_seq = RAJA::seq_reduce;
 #endif
 #endif
 

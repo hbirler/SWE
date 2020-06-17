@@ -30,7 +30,7 @@ void SWE_WaveAccumulationBlock::computeNumericalFluxes() {
   auto rows = this->h.getRows();
 
   RAJA::region<policies::region>([=]() {
-    RAJA::ReduceMax<policies::reduce, float> l_maxWaveSpeed(0.0f);
+    RAJA::ReduceMax<policies::reduce_seq, float> l_maxWaveSpeed(0.0f);
 
     RAJA::kernel<policies::loop_2d<true>>(
         RAJA::make_tuple(RAJA::RangeSegment(1, ny + 1), RAJA::RangeSegment(1, nx + 2)),
