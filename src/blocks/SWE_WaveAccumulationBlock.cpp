@@ -54,9 +54,12 @@ SWE_WaveAccumulationBlock::SWE_WaveAccumulationBlock(
 		int l_nx, int l_ny,
 		float l_dx, float l_dy):
   SWE_Block(l_nx, l_ny, l_dx, l_dy),
-  hNetUpdates (nx+2, ny+2),
-  huNetUpdates(nx+2, ny+2),
-  hvNetUpdates(nx+2, ny+2)
+  hNetUpdatesL (nx+2, ny+2),
+  huNetUpdatesL(nx+2, ny+2),
+  hvNetUpdatesL(nx+2, ny+2),
+  hNetUpdatesR (nx+2, ny+2),
+  huNetUpdatesR(nx+2, ny+2),
+  hvNetUpdatesR(nx+2, ny+2)
 {}
 
 /**
@@ -105,10 +108,10 @@ void SWE_WaveAccumulationBlock::computeNumericalFluxes() {
                                                maxEdgeSpeed );
 
 			// accumulate net updates to cell-wise net updates for h and hu
-			hNetUpdates[i-1][j]  += dx_inv * hNetUpLeft;
-			huNetUpdates[i-1][j] += dx_inv * huNetUpLeft;
-			hNetUpdates[i][j]    += dx_inv * hNetUpRight;
-			huNetUpdates[i][j]   += dx_inv * huNetUpRight;
+			hNetUpdatesL[i-1][j]  += dx_inv * hNetUpLeft;
+			huNetUpdatesL[i-1][j] += dx_inv * huNetUpLeft;
+			hNetUpdatesR[i][j]    += dx_inv * hNetUpRight;
+			huNetUpdatesR[i][j]   += dx_inv * huNetUpRight;
 
 			#ifdef LOOP_OPENMP
 				//update the thread-local maximum wave speed
@@ -146,10 +149,10 @@ void SWE_WaveAccumulationBlock::computeNumericalFluxes() {
                                                maxEdgeSpeed );
 
 			// accumulate net updates to cell-wise net updates for h and hu
-			hNetUpdates[i][j-1]  += dy_inv * hNetUpDow;
-			hvNetUpdates[i][j-1] += dy_inv * hvNetUpDow;
-			hNetUpdates[i][j]    += dy_inv * hNetUpUpw;
-			hvNetUpdates[i][j]   += dy_inv * hvNetUpUpw;
+			hNetUpdatesL[i][j-1]  += dy_inv * hNetUpDow;
+			hvNetUpdatesL[i][j-1] += dy_inv * hvNetUpDow;
+			hNetUpdatesR[i][j]    += dy_inv * hNetUpUpw;
+			hvNetUpdatesR[i][j]   += dy_inv * hvNetUpUpw;
 
 			#ifdef LOOP_OPENMP
 				//update the thread-local maximum wave speed
@@ -206,13 +209,16 @@ void SWE_WaveAccumulationBlock::updateUnknowns(float dt) {
 #endif // VECTORIZE
 		for(int j = 1; j < ny_end; j++) {
 
-			h[i][j]  -= dt * hNetUpdates[i][j];
-			hu[i][j] -= dt * huNetUpdates[i][j];
-			hv[i][j] -= dt * hvNetUpdates[i][j];
+			h[i][j]  -= dt * (hNetUpdatesL[i][j] + hNetUpdatesR[i][j]);
+			hu[i][j] -= dt * (huNetUpdatesL[i][j] + huNetUpdatesR[i][j]);
+			hv[i][j] -= dt * (hvNetUpdatesL[i][j] + hvNetUpdatesR[i][j]);
 
-			hNetUpdates[i][j] = (float) 0;
-			huNetUpdates[i][j] = (float) 0;
-			hvNetUpdates[i][j] = (float) 0;
+			hNetUpdatesL[i][j] = (float) 0;
+			huNetUpdatesL[i][j] = (float) 0;
+			hvNetUpdatesL[i][j] = (float) 0;
+                        hNetUpdatesR[i][j] = (float) 0;
+                        huNetUpdatesR[i][j] = (float) 0;
+                        hvNetUpdatesR[i][j] = (float) 0;
 
 			//TODO: proper dryTol
 			if (h[i][j] < 0.1)

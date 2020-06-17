@@ -73,13 +73,16 @@ class SWE_WaveAccumulationBlock: public SWE_Block {
 #endif
 
     //! net-updates for the heights of the cells (for accumulation)
-    Float2D hNetUpdates;
+    Float2D hNetUpdatesL;
+    Float2D hNetUpdatesR;
 
     //! net-updates for the x-momentums of the cells (for accumulation)
-    Float2D huNetUpdates;
+    Float2D huNetUpdatesL;
+    Float2D huNetUpdatesR;
 
     //! net-updates for the y-momentums of the cells (for accumulation)
-    Float2D hvNetUpdates;
+    Float2D hvNetUpdatesL;
+    Float2D hvNetUpdatesR;
 
   public:
     //constructor of a SWE_WaveAccumulationBlock.
